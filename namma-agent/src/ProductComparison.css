@@ -1,0 +1,292 @@
+/* Comparison Overlay */
+   .comparison-overlay {
+     position: fixed;
+     width: 375px;
+     height: 812px;
+     background-color: #ffffff;
+     z-index: 300;
+     left: 50%;
+     top: 50%;
+     transform: translate(-50%, -50%);
+     overflow: hidden;
+     border-radius: 40px;
+     display: flex;
+     flex-direction: column;
+   }
+   
+   .comparison-container {
+     width: 100%;
+     height: 100%;
+     display: flex;
+     flex-direction: column;
+     background-color: #ffffff;
+   }
+   
+   /* Header */
+   .comparison-header {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 16px 20px;
+     background-color: #f9fafb;
+     border-bottom: 1px solid #e5e7eb;
+     flex-shrink: 0;
+   }
+   
+   .back-button {
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     border: none;
+     background-color: #ffffff;
+     color: #374151;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+   }
+   
+   .comparison-title {
+     font-size: 18px;
+     font-weight: 700;
+     color: #1a1a2e;
+     margin: 0;
+   }
+   
+   .header-spacer {
+     width: 40px;
+   }
+   
+   /* Devices Header */
+   .devices-header {
+     display: flex;
+     padding: 20px;
+     gap: 12px;
+     background-color: #ffffff;
+     border-bottom: 1px solid #f3f4f6;
+     flex-shrink: 0;
+   }
+   
+   .device-header-col {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     padding: 16px 8px;
+     border-radius: 16px;
+     background-color: #f9fafb;
+     border: 2px solid transparent;
+     cursor: pointer;
+     transition: all 0.2s ease;
+     position: relative;
+   }
+   
+   .device-header-col.selected {
+     background-color: #f0eeff;
+     border-color: #5b4fcf;
+   }
+   
+   .remove-device-btn {
+     position: absolute;
+     top: -8px;
+     right: -8px;
+     width: 28px;
+     height: 28px;
+     border-radius: 50%;
+     border: none;
+     background-color: #ef4444;
+     color: #ffffff;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+   }
+   
+   .device-image-small {
+     width: 60px;
+     height: 60px;
+     border-radius: 12px;
+     overflow: hidden;
+     margin-bottom: 8px;
+   }
+   
+   .device-image-small img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+   }
+   
+   .device-short-name {
+     font-size: 13px;
+     font-weight: 600;
+     color: #1a1a2e;
+     text-align: center;
+     margin-bottom: 4px;
+   }
+   
+   .device-price {
+     font-size: 14px;
+     font-weight: 700;
+     color: #5b4fcf;
+   }
+   
+   /* Scrollable Content */
+   .comparison-scroll-content {
+     flex: 1;
+     overflow-y: auto;
+     padding: 20px;
+   }
+   
+   .comparison-scroll-content::-webkit-scrollbar {
+     display: none;
+   }
+   
+   /* Comparison Section */
+   .comparison-section {
+     margin-bottom: 24px;
+     background-color: #f9fafb;
+     border-radius: 16px;
+     padding: 16px;
+   }
+   
+   .spec-category-header {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     font-size: 12px;
+     font-weight: 700;
+     color: #5b4fcf;
+     text-transform: uppercase;
+     letter-spacing: 1px;
+     margin-bottom: 16px;
+     padding-bottom: 12px;
+     border-bottom: 1px solid #e5e7eb;
+   }
+   
+   .spec-values-row {
+     display: flex;
+     gap: 12px;
+     margin-bottom: 12px;
+   }
+   
+   .spec-value-col {
+     flex: 1;
+     text-align: center;
+     padding: 12px 8px;
+     background-color: #ffffff;
+     border-radius: 12px;
+     font-size: 14px;
+     font-weight: 600;
+     color: #374151;
+   }
+   
+   .spec-value-col.best {
+     background-color: #5b4fcf;
+     color: #ffffff;
+   }
+   
+   /* Insight Box */
+   .insight-box {
+     background: linear-gradient(135deg, #f0eeff 0%, #e8e5f5 100%);
+     border-radius: 12px;
+     padding: 14px 16px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 8px;
+     text-align: center;
+   }
+   
+   .insight-icon {
+     color: #5b4fcf;
+     flex-shrink: 0;
+   }
+   
+   .insight-text {
+     font-size: 13px;
+     color: #5b4fcf;
+     font-weight: 600;
+   }
+   
+   /* Recommendation Box */
+   .recommendation-box {
+     background: linear-gradient(135deg, #f0eeff 0%, #ffffff 100%);
+     border-radius: 16px;
+     padding: 20px;
+     border: 2px solid #e8e5f5;
+     margin-bottom: 20px;
+   }
+   
+   .rec-item {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+   }
+   
+   .rec-label {
+     font-size: 14px;
+     font-weight: 600;
+     color: #6b7280;
+   }
+   
+   .rec-device {
+     font-size: 16px;
+     font-weight: 700;
+     color: #5b4fcf;
+   }
+   
+   /* Footer */
+   .comparison-footer {
+     padding: 16px 20px 24px;
+     background-color: #ffffff;
+     border-top: 1px solid #f3f4f6;
+     flex-shrink: 0;
+   }
+   
+   .proceed-button {
+     width: 100%;
+     background-color: #5b4fcf;
+     color: #ffffff;
+     border: none;
+     padding: 16px 24px;
+     border-radius: 16px;
+     font-size: 16px;
+     font-weight: 700;
+     cursor: pointer;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 4px;
+     transition: all 0.2s ease;
+     box-shadow: 0 4px 16px rgba(91, 79, 207, 0.3);
+   }
+   
+   .proceed-button:hover {
+     background-color: #4a3fb8;
+     transform: translateY(-2px);
+     box-shadow: 0 6px 20px rgba(91, 79, 207, 0.4);
+   }
+   
+   .proceed-price {
+     font-size: 14px;
+     font-weight: 600;
+     opacity: 0.9;
+   }
+   
+   .select-prompt {
+     text-align: center;
+     color: #9ca3af;
+     font-size: 14px;
+     margin: 0;
+     padding: 16px;
+   }
+   
+   /* Responsive */
+   @media (max-width: 420px) {
+     .comparison-overlay {
+       width: 100%;
+       height: 100vh;
+       border-radius: 0;
+     }
+   }
