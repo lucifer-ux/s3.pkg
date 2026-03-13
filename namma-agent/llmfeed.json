@@ -1,0 +1,364 @@
+{
+  "SmartPhones": {
+    "Processor": [
+      {
+        "EntryLevel": {
+          "description": "Basic processor suitable for everyday tasks like calling, messaging, watching videos, and browsing.",
+          "example": "When opening a heavy game like BGMI, the game may take longer to start and may lag while playing."
+        }
+      },
+      {
+        "MidRange": {
+          "description": "Balanced processor that can handle daily tasks and some gaming smoothly.",
+          "example": "When opening a heavy game like BGMI, the game opens reasonably fast and runs smoothly most of the time."
+        }
+      },
+      {
+        "Flagship": {
+          "description": "Very powerful processor designed for fast performance and heavy usage.",
+          "example": "When opening a heavy game like BGMI, the game starts instantly and runs smoothly even at high graphics settings."
+        }
+      }
+    ],
+    "RAM": [
+      {
+        "4GB": {
+          "description": "Suitable for basic usage like calls, messaging, and light apps.",
+          "example": "When switching between YouTube, WhatsApp, and Chrome, some apps may reload because the phone cannot keep many apps open."
+        }
+      },
+      {
+        "6GB": {
+          "description": "Balanced RAM suitable for most users and moderate multitasking.",
+          "example": "When switching between YouTube, WhatsApp, and Chrome, most apps stay open and switch smoothly."
+        }
+      },
+      {
+        "8GB_or_more": {
+          "description": "Large RAM suitable for gaming and heavy multitasking.",
+          "example": "When switching between YouTube, WhatsApp, Chrome, and games, apps open instantly without restarting."
+        }
+      }
+    ],
+    "Storage": [
+      {
+        "64GB": {
+          "description": "Basic storage suitable for limited apps and photos.",
+          "example": "When saving photos during a vacation trip, the storage may fill up faster if you take many photos and videos."
+        }
+      },
+      {
+        "128GB": {
+          "description": "Balanced storage suitable for most users with many apps and photos.",
+          "example": "When saving vacation photos and videos, you will usually have enough space without worrying about storage."
+        }
+      },
+      {
+        "256GB_or_more": {
+          "description": "Large storage suitable for people who store many photos, videos, and games.",
+          "example": "When recording lots of videos during a vacation trip, you will still have plenty of storage left."
+        }
+      }
+    ],
+    "DisplayType": [
+      {
+        "LCD": {
+          "description": "Basic display commonly used in budget phones. Colors and blacks are normal but not very deep.",
+          "example": "When watching a space scene in a movie, the sky may look dark gray instead of completely black."
+        }
+      },
+      {
+        "OLED": {
+          "description": "Better display with improved colors and darker blacks compared to LCD.",
+          "example": "When watching a space scene in a movie, the sky looks darker and stars stand out more clearly."
+        }
+      },
+      {
+        "AMOLED": {
+          "description": "Advanced display with richer colors and deeper blacks used in many premium phones.",
+          "example": "When watching a space scene in a movie, the sky looks completely black and the stars appear very bright."
+        }
+      }
+    ],
+    "RefreshRate": [
+      {
+        "60Hz": {
+          "description": "Standard refresh rate used in many phones.",
+          "example": "When scrolling Instagram, the feed moves normally but not very smoothly."
+        }
+      },
+      {
+        "90Hz": {
+          "description": "Smoother display compared to standard screens.",
+          "example": "When scrolling Instagram, the movement feels smoother and easier on the eyes."
+        }
+      },
+      {
+        "120Hz": {
+          "description": "Very smooth display ideal for gaming and fast scrolling.",
+          "example": "When scrolling Instagram, the feed moves extremely smoothly with almost no visible stutter."
+        }
+      }
+    ],
+    "CameraType": [
+      {
+        "Standard": {
+          "description": "Regular camera used for everyday photos.",
+          "example": "When taking a group photo, you may need to step back to fit everyone into the frame."
+        }
+      },
+      {
+        "UltraWide": {
+          "description": "Camera that captures a wider area in one photo.",
+          "example": "When taking a group photo, everyone can easily fit into the frame without stepping back."
+        }
+      },
+      {
+        "Telephoto": {
+          "description": "Camera used for zooming into far objects while keeping the image clear.",
+          "example": "When taking a photo of a building far away, the zoomed image still looks clear."
+        }
+      }
+    ],
+    "BatteryCapacity": [
+      {
+        "4000mAh": {
+          "description": "Average battery capacity suitable for light usage.",
+          "example": "When using the phone for calls, social media, and videos, the battery may last until evening."
+        }
+      },
+      {
+        "5000mAh": {
+          "description": "Balanced battery capacity that usually lasts a full day.",
+          "example": "When using the phone throughout the day for calls, videos, and social media, it usually lasts until night."
+        }
+      },
+      {
+        "6000mAh": {
+          "description": "Large battery designed for heavy usage.",
+          "example": "When using the phone heavily for gaming and videos, the battery can last more than a day."
+        }
+      }
+    ],
+    "ChargingSpeed": [
+      {
+        "NormalCharging": {
+          "description": "Basic charging speed that takes longer to fully charge the phone.",
+          "example": "When charging the phone in the morning, it may take about two hours to reach full battery."
+        }
+      },
+      {
+        "FastCharging": {
+          "description": "Faster charging that reduces waiting time.",
+          "example": "When charging the phone in the morning, it may reach full battery in about one hour."
+        }
+      },
+      {
+        "SuperFastCharging": {
+          "description": "Very fast charging technology used in many premium phones.",
+          "example": "When charging the phone before leaving home, it may reach full battery in around thirty minutes."
+        }
+      }
+    ],
+    "BuildMaterial": [
+      {
+        "Plastic": {
+          "description": "Lightweight material commonly used in budget phones.",
+          "example": "When holding the phone, it feels light but not very premium."
+        }
+      },
+      {
+        "Glass": {
+          "description": "Premium-looking material that gives the phone a stylish appearance.",
+          "example": "When holding the phone, it looks shiny and feels more premium."
+        }
+      },
+      {
+        "MetalFrame": {
+          "description": "Strong and durable material used in many premium phones.",
+          "example": "When holding the phone, it feels solid and sturdy."
+        }
+      }
+    ]
+  },
+  "Laptops": {
+    "Processor": [
+      {
+        "Basic": {
+          "description": "Entry-level processors are good for simple work like browsing, watching videos, and using Office apps.",
+          "example": "When opening many Chrome tabs and a PowerPoint file together, the laptop may become slow."
+        }
+      },
+      {
+        "MidRange": {
+          "description": "Mid-range processors handle office work, programming, and light gaming smoothly.",
+          "example": "When opening Chrome, Excel, and a video call at the same time, the laptop runs smoothly without slowing down."
+        }
+      },
+      {
+        "HighEnd": {
+          "description": "High-end processors are very powerful and handle heavy tasks like gaming, video editing, and development easily.",
+          "example": "When editing a 4K video or running heavy software, the laptop stays fast and responsive."
+        }
+      }
+    ],
+    "RAM": [
+      {
+        "8GB": {
+          "description": "Suitable for basic work and everyday tasks.",
+          "example": "When running a browser, Word, and a video call, the laptop works fine but may slow if many apps are open."
+        }
+      },
+      {
+        "16GB": {
+          "description": "Great for multitasking and professional work.",
+          "example": "When running multiple apps like Chrome, Excel, Zoom, and coding tools, everything runs smoothly."
+        }
+      },
+      {
+        "32GB_or_more": {
+          "description": "Designed for heavy professional tasks like video editing and 3D design.",
+          "example": "When editing large videos or running design software, the laptop still runs smoothly."
+        }
+      }
+    ],
+    "Storage": [
+      {
+        "HDD": {
+          "description": "Traditional storage that provides large capacity but slower speed.",
+          "example": "When turning on the laptop or opening apps, it may take noticeable time."
+        }
+      },
+      {
+        "SSD": {
+          "description": "Modern storage that makes the laptop much faster.",
+          "example": "When turning on the laptop, it starts within a few seconds and apps open quickly."
+        }
+      }
+    ]
+  },
+  "Televisions": {
+    "DisplayType": [
+      {
+        "LED": {
+          "description": "Standard TV display used in many affordable TVs.",
+          "example": "When watching a night scene in a movie, dark areas may look slightly gray."
+        }
+      },
+      {
+        "QLED": {
+          "description": "Improved LED display with brighter colors.",
+          "example": "When watching a nature documentary, colors like green forests and blue oceans look brighter."
+        }
+      },
+      {
+        "OLED": {
+          "description": "Premium display with very deep blacks and excellent picture quality.",
+          "example": "When watching a space movie scene, the sky looks completely black and stars look very bright."
+        }
+      }
+    ],
+    "Resolution": [
+      {
+        "FullHD": {
+          "description": "Basic TV resolution suitable for smaller TVs.",
+          "example": "When watching regular TV channels, the picture looks clear enough."
+        }
+      },
+      {
+        "4K": {
+          "description": "Very sharp picture with much more detail.",
+          "example": "When watching a 4K movie, you can see very fine details like textures in landscapes."
+        }
+      }
+    ]
+  },
+  "Refrigerators": {
+    "Type": [
+      {
+        "SingleDoor": {
+          "description": "Compact refrigerator suitable for small families or single users.",
+          "example": "When storing groceries for a few days, it provides enough space but may feel small for large families."
+        }
+      },
+      {
+        "DoubleDoor": {
+          "description": "Separate freezer and fridge compartments with more storage.",
+          "example": "When storing vegetables, fruits, and frozen food together, everything fits comfortably."
+        }
+      },
+      {
+        "SideBySide": {
+          "description": "Large refrigerator with lots of storage space and modern design.",
+          "example": "When storing groceries for a big family or parties, there is plenty of space."
+        }
+      }
+    ],
+    "CoolingType": [
+      {
+        "DirectCool": {
+          "description": "Basic cooling system that requires manual defrosting.",
+          "example": "Ice can build up in the freezer and may need to be cleaned occasionally."
+        }
+      },
+      {
+        "FrostFree": {
+          "description": "Advanced cooling that prevents ice buildup automatically.",
+          "example": "You never need to manually remove ice from the freezer."
+        }
+      }
+    ]
+  },
+  "WashingMachines": {
+    "Type": [
+      {
+        "SemiAutomatic": {
+          "description": "Budget washing machine where some steps require manual work.",
+          "example": "After washing clothes, you may need to move them manually to the dryer section."
+        }
+      },
+      {
+        "TopLoad": {
+          "description": "Fully automatic washing machine with lid on top.",
+          "example": "You just add clothes and detergent, and the machine handles washing and drying automatically."
+        }
+      },
+      {
+        "FrontLoad": {
+          "description": "Premium washing machine known for better cleaning and water efficiency.",
+          "example": "When washing dirty clothes, the machine cleans thoroughly and uses less water."
+        }
+      }
+    ]
+  },
+  "AirConditioners": {
+    "Type": [
+      {
+        "WindowAC": {
+          "description": "Basic air conditioner installed in a window or wall.",
+          "example": "When cooling a small bedroom, it cools the room but can be slightly noisy."
+        }
+      },
+      {
+        "SplitAC": {
+          "description": "Modern AC with indoor and outdoor units, quieter and more efficient.",
+          "example": "When cooling a bedroom, the room becomes cool quickly and quietly."
+        }
+      }
+    ],
+    "Compressor": [
+      {
+        "NonInverter": {
+          "description": "Traditional AC compressor that turns on and off repeatedly.",
+          "example": "When the room becomes cool, the AC stops and then starts again later."
+        }
+      },
+      {
+        "Inverter": {
+          "description": "Advanced compressor that adjusts power automatically to save electricity.",
+          "example": "When the room reaches the desired temperature, the AC slows down instead of turning off, saving energy."
+        }
+      }
+    ]
+  }
+}

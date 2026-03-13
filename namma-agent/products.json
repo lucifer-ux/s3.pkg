@@ -1,0 +1,3522 @@
+[
+  {
+    "product_id": "prod_samsung_galaxy_s23",
+    "name": "Samsung Galaxy S23",
+    "slug": "samsung-galaxy-s23",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-S911B",
+    "release_year": 2023,
+    "description": "Samsung Galaxy S23 flagship smartphone with Snapdragon 8 Gen 2 processor and Dynamic AMOLED display.",
+    "highlights": [
+      "6.1-inch Dynamic AMOLED 2X display",
+      "Snapdragon 8 Gen 2 processor",
+      "50MP triple camera",
+      "120Hz refresh rate",
+      "IP68 water resistance"
+    ],
+    "options": {
+      "color": [
+        "Phantom Black",
+        "Cream",
+        "Green"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_s23_black_128",
+        "color": "Phantom Black",
+        "storage": "128GB",
+        "price": {
+          "mrp": 74999,
+          "selling_price": 69999,
+          "currency": "INR",
+          "discount_percentage": 6.7
+        },
+        "stock_quantity": 150
+      }
+    ],
+    "ratings": {
+      "average_rating": 4.5,
+      "total_reviews": 8542
+    },
+    "rating_breakdown": {
+      "5_star": 5200,
+      "4_star": 2200,
+      "3_star": 650,
+      "2_star": 250,
+      "1_star": 242
+    },
+    "reviews": [
+      {
+        "review_id": "rev_s23_1",
+        "user_name": "Ankit Jain",
+        "rating": 5,
+        "title": "Fantastic Android flagship",
+        "review_text": "The performance is extremely smooth and the display is gorgeous. Cameras perform great in daylight and low light.",
+        "verified_purchase": true,
+        "helpful_votes": 44,
+        "review_date": "2025-01-15"
+      }
+    ]
+  },
+  {
+    "product_id": "prod_macbook_air_m2",
+    "name": "Apple MacBook Air M2",
+    "slug": "apple-macbook-air-m2",
+    "brand": "Apple",
+    "category": "Laptops",
+    "model_number": "A2681",
+    "release_year": 2022,
+    "description": "Ultra-thin Apple laptop powered by the M2 chip with incredible battery life.",
+    "highlights": [
+      "Apple M2 chip",
+      "13.6-inch Liquid Retina display",
+      "18-hour battery life",
+      "Fanless silent design",
+      "MagSafe charging"
+    ],
+    "options": {
+      "color": [
+        "Midnight",
+        "Starlight",
+        "Space Gray"
+      ],
+      "ram": [
+        "8GB",
+        "16GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_mba_midnight_8gb",
+        "color": "Midnight",
+        "ram": "8GB",
+        "price": {
+          "mrp": 119900,
+          "selling_price": 109900,
+          "currency": "INR",
+          "discount_percentage": 8.3
+        },
+        "stock_quantity": 60
+      }
+    ],
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 6320
+    },
+    "rating_breakdown": {
+      "5_star": 4200,
+      "4_star": 1500,
+      "3_star": 420,
+      "2_star": 120,
+      "1_star": 80
+    }
+  },
+  {
+    "product_id": "prod_sony_bravia_x75k",
+    "name": "Sony Bravia X75K 55-inch 4K Smart TV",
+    "slug": "sony-bravia-x75k-55",
+    "brand": "Sony",
+    "category": "Televisions",
+    "model_number": "KD-55X75K",
+    "release_year": 2023,
+    "description": "Sony 55-inch 4K Ultra HD Smart TV with Google TV and Dolby Audio.",
+    "highlights": [
+      "4K HDR display",
+      "Google TV interface",
+      "Dolby Audio",
+      "Voice assistant support"
+    ],
+    "options": {
+      "size": [
+        "43 inch",
+        "55 inch",
+        "65 inch"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_tv_55",
+        "size": "55 inch",
+        "price": {
+          "mrp": 79990,
+          "selling_price": 69990,
+          "currency": "INR",
+          "discount_percentage": 12.5
+        },
+        "stock_quantity": 40
+      }
+    ],
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 4200
+    }
+  },
+  {
+    "product_id": "prod_lg_double_door_fridge",
+    "name": "LG 260L Double Door Refrigerator",
+    "slug": "lg-260l-double-door-fridge",
+    "brand": "LG",
+    "category": "Refrigerators",
+    "model_number": "GL-I292RPZX",
+    "release_year": 2023,
+    "description": "Energy efficient double door refrigerator with Smart Inverter Compressor.",
+    "highlights": [
+      "260L capacity",
+      "Smart inverter compressor",
+      "Frost free cooling",
+      "Convertible freezer"
+    ],
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 3100
+    }
+  },
+  {
+    "product_id": "prod_ifb_washing_machine",
+    "name": "IFB 8kg Front Load Washing Machine",
+    "slug": "ifb-8kg-front-load-washing-machine",
+    "brand": "IFB",
+    "category": "Washing Machines",
+    "model_number": "Senator MXS 8012",
+    "release_year": 2024,
+    "description": "Fully automatic front load washing machine with AI wash technology.",
+    "highlights": [
+      "8kg capacity",
+      "AI wash",
+      "1200 RPM spin speed",
+      "Steam wash"
+    ],
+    "ratings": {
+      "average_rating": 4.3,
+      "total_reviews": 2200
+    }
+  },
+  {
+    "product_id": "prod_daikin_ac",
+    "name": "Daikin 1.5 Ton Inverter Split AC",
+    "slug": "daikin-1-5-ton-inverter-ac",
+    "brand": "Daikin",
+    "category": "Air Conditioners",
+    "model_number": "FTKF50TV",
+    "release_year": 2024,
+    "description": "Energy efficient inverter AC with fast cooling and PM2.5 filter.",
+    "highlights": [
+      "1.5 Ton cooling",
+      "Inverter compressor",
+      "5 star energy rating",
+      "PM2.5 air filter"
+    ],
+    "ratings": {
+      "average_rating": 4.5,
+      "total_reviews": 1980
+    }
+  },
+  {
+    "product_id": "prod_ipad_air",
+    "name": "Apple iPad Air (5th Gen)",
+    "slug": "apple-ipad-air-5",
+    "brand": "Apple",
+    "category": "Tablets",
+    "model_number": "A2588",
+    "release_year": 2022,
+    "description": "Powerful tablet with Apple M1 chip and 10.9-inch Liquid Retina display.",
+    "highlights": [
+      "Apple M1 chip",
+      "10.9-inch Liquid Retina display",
+      "Apple Pencil support",
+      "Touch ID"
+    ],
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 5400
+    }
+  },
+  {
+    "product_id": "prod_ps5",
+    "name": "Sony PlayStation 5",
+    "slug": "sony-playstation-5",
+    "brand": "Sony",
+    "category": "Gaming Consoles",
+    "model_number": "CFI-1208A",
+    "release_year": 2023,
+    "description": "Next generation gaming console with ultra fast SSD and ray tracing.",
+    "highlights": [
+      "Ultra-fast SSD",
+      "Ray tracing support",
+      "DualSense controller",
+      "4K gaming"
+    ],
+    "ratings": {
+      "average_rating": 4.8,
+      "total_reviews": 12000
+    }
+  },
+  {
+    "product_id": "prod_apple_watch_series9",
+    "name": "Apple Watch Series 9",
+    "slug": "apple-watch-series-9",
+    "brand": "Apple",
+    "category": "Smartwatches",
+    "model_number": "A2983",
+    "release_year": 2023,
+    "description": "Advanced smartwatch with health monitoring and fitness tracking.",
+    "highlights": [
+      "Always-on Retina display",
+      "ECG app",
+      "Blood oxygen sensor",
+      "Fitness tracking"
+    ],
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 7800
+    }
+  },
+  {
+    "product_id": "prod_sony_a7iv",
+    "name": "Sony Alpha A7 IV Mirrorless Camera",
+    "slug": "sony-a7iv-camera",
+    "brand": "Sony",
+    "category": "Cameras",
+    "model_number": "ILCE-7M4",
+    "release_year": 2022,
+    "description": "Professional mirrorless camera with 33MP full-frame sensor.",
+    "highlights": [
+      "33MP full-frame sensor",
+      "4K 60fps video",
+      "Fast hybrid autofocus",
+      "5-axis image stabilization"
+    ],
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 1500
+    }
+  },
+  {
+    "product_id": "prod_apple_iphone_15",
+    "name": "Apple iPhone 15",
+    "slug": "apple-iphone-15",
+    "brand": "Apple",
+    "category": "Smartphones",
+    "model_number": "A3090",
+    "release_year": 2023,
+    "description": "Apple iPhone 15 with A16 Bionic chip, 48MP main camera, Dynamic Island, and a 6.1-inch Super Retina XDR display.",
+    "highlights": [
+      "48MP Main Camera with advanced computational photography",
+      "A16 Bionic chip for fast performance",
+      "6.1-inch Super Retina XDR OLED display",
+      "Dynamic Island for alerts and activities",
+      "USB-C connectivity for charging and accessories"
+    ],
+    "options": {
+      "color": [
+        "Black",
+        "Blue",
+        "Pink",
+        "Yellow"
+      ],
+      "storage": [
+        "128GB",
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_ip15_black_128",
+        "color": "Black",
+        "storage": "128GB",
+        "price": {
+          "mrp": 79900,
+          "selling_price": 73900,
+          "currency": "INR",
+          "discount_percentage": 7.5
+        },
+        "stock_quantity": 120
+      },
+      {
+        "sku_id": "sku_ip15_blue_256",
+        "color": "Blue",
+        "storage": "256GB",
+        "price": {
+          "mrp": 89900,
+          "selling_price": 84900,
+          "currency": "INR",
+          "discount_percentage": 5.5
+        },
+        "stock_quantity": 80
+      }
+    ],
+    "display": {
+      "type": "Super Retina XDR OLED",
+      "size_inches": 6.1,
+      "resolution": "2556 x 1179",
+      "refresh_rate_hz": 60
+    },
+    "processor": {
+      "chipset": "Apple A16 Bionic",
+      "cpu": "6-core CPU",
+      "gpu": "5-core GPU"
+    },
+    "memory": {
+      "ram": "6GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 48,
+          "aperture": "f/1.6"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 12,
+        "aperture": "f/1.9"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 3349,
+      "charging": "20W wired, 15W MagSafe wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "iOS",
+      "version": "iOS 17"
+    },
+    "dimensions": {
+      "height_mm": 147.6,
+      "width_mm": 71.6,
+      "thickness_mm": 7.8,
+      "weight_g": 171
+    },
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 18432
+    },
+    "rating_breakdown": {
+      "5_star": 12140,
+      "4_star": 4100,
+      "3_star": 1100,
+      "2_star": 450,
+      "1_star": 642
+    },
+    "reviews": [
+      {
+        "review_id": "rev_10001",
+        "user_name": "Rahul Sharma",
+        "rating": 5,
+        "title": "Excellent camera and performance",
+        "review_text": "Upgraded from iPhone 12 and the difference is huge. The 48MP camera captures amazing details and the phone feels extremely fast.",
+        "verified_purchase": true,
+        "helpful_votes": 142,
+        "review_date": "2024-12-11"
+      },
+      {
+        "review_id": "rev_10002",
+        "user_name": "Priya Nair",
+        "rating": 4,
+        "title": "Great phone but slightly expensive",
+        "review_text": "Display quality and build are excellent. Dynamic Island is actually useful. Price feels a bit high for the base storage.",
+        "verified_purchase": true,
+        "helpful_votes": 87,
+        "review_date": "2024-11-27"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "flagship",
+        "apple",
+        "5g",
+        "premium"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_applestore_india",
+      "seller_name": "Apple Authorized Store",
+      "seller_rating": 4.8
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/iphone15-front.jpg",
+      "https://example.com/products/iphone15-back.jpg"
+    ],
+    "created_at": "2024-10-01T12:21:00Z",
+    "updated_at": "2025-01-10T09:30:00Z"
+  },
+  {
+    "product_id": "prod_apple_iphone_15_pro_max",
+    "name": "Apple iPhone 15 Pro Max",
+    "slug": "apple-iphone-15-pro-max",
+    "brand": "Apple",
+    "category": "Smartphones",
+    "model_number": "A3106",
+    "release_year": 2023,
+    "description": "iPhone 15 Pro Max with A17 Pro chip, titanium design, 5x optical zoom telephoto, and Action Button.",
+    "highlights": [
+      "A17 Pro chip with 6-core GPU",
+      "5x Optical Zoom Telephoto camera",
+      "6.7-inch Super Retina XDR ProMotion 120Hz",
+      "Aerospace-grade titanium frame",
+      "USB 3 speeds with USB-C"
+    ],
+    "options": {
+      "color": [
+        "Black Titanium",
+        "White Titanium",
+        "Blue Titanium",
+        "Natural Titanium"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_ip15pm_black_256",
+        "color": "Black Titanium",
+        "storage": "256GB",
+        "price": {
+          "mrp": 159900,
+          "selling_price": 149900,
+          "currency": "INR",
+          "discount_percentage": 6.3
+        },
+        "stock_quantity": 70
+      },
+      {
+        "sku_id": "sku_ip15pm_nat_512",
+        "color": "Natural Titanium",
+        "storage": "512GB",
+        "price": {
+          "mrp": 179900,
+          "selling_price": 169900,
+          "currency": "INR",
+          "discount_percentage": 5.6
+        },
+        "stock_quantity": 45
+      }
+    ],
+    "display": {
+      "type": "Super Retina XDR ProMotion OLED",
+      "size_inches": 6.7,
+      "resolution": "2796 x 1290",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Apple A17 Pro",
+      "cpu": "6-core CPU",
+      "gpu": "6-core GPU"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 48,
+          "aperture": "f/1.78"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto 5x",
+          "megapixels": 12,
+          "aperture": "f/2.8"
+        }
+      ],
+      "front": {
+        "megapixels": 12,
+        "aperture": "f/1.9"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4422,
+      "charging": "27W wired, 15W MagSafe wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C USB3",
+      "NFC"
+    ],
+    "os": {
+      "name": "iOS",
+      "version": "iOS 17"
+    },
+    "dimensions": {
+      "height_mm": 159.9,
+      "width_mm": 76.7,
+      "thickness_mm": 8.25,
+      "weight_g": 221
+    },
+    "ratings": {
+      "average_rating": 4.8,
+      "total_reviews": 22100
+    },
+    "rating_breakdown": {
+      "5_star": 17000,
+      "4_star": 3500,
+      "3_star": 1000,
+      "2_star": 300,
+      "1_star": 300
+    },
+    "reviews": [
+      {
+        "review_id": "rev_20001",
+        "user_name": "Meera Krishnan",
+        "rating": 5,
+        "title": "The best iPhone ever made",
+        "review_text": "Titanium feels premium and lighter than expected. 5x zoom is phenomenal for travel photography. A17 Pro handles everything effortlessly.",
+        "verified_purchase": true,
+        "helpful_votes": 520,
+        "review_date": "2024-12-25"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "apple",
+        "pro",
+        "titanium",
+        "5x-zoom",
+        "flagship"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_applestore_india",
+      "seller_name": "Apple Authorized Store",
+      "seller_rating": 4.8
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/iphone15promax-front.jpg",
+      "https://example.com/products/iphone15promax-back.jpg"
+    ],
+    "created_at": "2023-09-22T10:00:00Z",
+    "updated_at": "2025-01-10T09:00:00Z"
+  },
+  {
+    "product_id": "prod_samsung_galaxy_s24_ultra",
+    "name": "Samsung Galaxy S24 Ultra",
+    "slug": "samsung-galaxy-s24-ultra",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-S928BZKGINS",
+    "release_year": 2024,
+    "description": "Samsung Galaxy S24 Ultra with Snapdragon 8 Gen 3, built-in S Pen, 200MP quad camera, and titanium frame.",
+    "highlights": [
+      "200MP main camera with 100x Space Zoom",
+      "Built-in S Pen for productivity",
+      "Snapdragon 8 Gen 3 for Galaxy",
+      "6.8-inch Dynamic AMOLED 2X 120Hz",
+      "Titanium frame with Gorilla Glass Armor"
+    ],
+    "options": {
+      "color": [
+        "Titanium Black",
+        "Titanium Gray",
+        "Titanium Violet",
+        "Titanium Yellow"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_s24u_black_256",
+        "color": "Titanium Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 134999,
+          "selling_price": 124999,
+          "currency": "INR",
+          "discount_percentage": 7.4
+        },
+        "stock_quantity": 60
+      },
+      {
+        "sku_id": "sku_s24u_grey_512",
+        "color": "Titanium Gray",
+        "storage": "512GB",
+        "price": {
+          "mrp": 154999,
+          "selling_price": 144999,
+          "currency": "INR",
+          "discount_percentage": 6.5
+        },
+        "stock_quantity": 40
+      }
+    ],
+    "display": {
+      "type": "Dynamic AMOLED 2X",
+      "size_inches": 6.8,
+      "resolution": "3088 x 1440",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 200,
+          "aperture": "f/1.7"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto 3x",
+          "megapixels": 10,
+          "aperture": "f/2.4"
+        },
+        {
+          "type": "Telephoto 5x",
+          "megapixels": 50,
+          "aperture": "f/3.4"
+        }
+      ],
+      "front": {
+        "megapixels": 12,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "45W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with One UI 6.1"
+    },
+    "dimensions": {
+      "height_mm": 162.3,
+      "width_mm": 79.0,
+      "thickness_mm": 8.6,
+      "weight_g": 232
+    },
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 16200
+    },
+    "rating_breakdown": {
+      "5_star": 11500,
+      "4_star": 3100,
+      "3_star": 1000,
+      "2_star": 380,
+      "1_star": 220
+    },
+    "reviews": [
+      {
+        "review_id": "rev_30001",
+        "user_name": "Aditya Menon",
+        "rating": 5,
+        "title": "200MP camera is absolutely insane",
+        "review_text": "100x Space Zoom captures details you wouldn't believe. S Pen is great for note-taking. Galaxy AI features are genuinely useful daily.",
+        "verified_purchase": true,
+        "helpful_votes": 430,
+        "review_date": "2025-01-05"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "samsung",
+        "ultra",
+        "s-pen",
+        "200mp",
+        "flagship"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/s24ultra-front.jpg",
+      "https://example.com/products/s24ultra-back.jpg"
+    ],
+    "created_at": "2024-01-17T10:00:00Z",
+    "updated_at": "2025-01-12T08:00:00Z"
+  },
+  {
+    "product_id": "prod_samsung_galaxy_s24",
+    "name": "Samsung Galaxy S24",
+    "slug": "samsung-galaxy-s24",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-S921BZKGINS",
+    "release_year": 2024,
+    "description": "Samsung Galaxy S24 with Snapdragon 8 Gen 3, 50MP triple camera, 6.2-inch Dynamic AMOLED 2X, and Galaxy AI features.",
+    "highlights": [
+      "50MP Main Camera with Nightography",
+      "Snapdragon 8 Gen 3 for Galaxy",
+      "6.2-inch Dynamic AMOLED 2X 120Hz",
+      "Galaxy AI with Circle to Search",
+      "Armor Aluminum compact frame"
+    ],
+    "options": {
+      "color": [
+        "Onyx Black",
+        "Marble Grey",
+        "Cobalt Violet",
+        "Amber Yellow"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_s24_black_128",
+        "color": "Onyx Black",
+        "storage": "128GB",
+        "price": {
+          "mrp": 74999,
+          "selling_price": 69999,
+          "currency": "INR",
+          "discount_percentage": 6.7
+        },
+        "stock_quantity": 150
+      },
+      {
+        "sku_id": "sku_s24_grey_256",
+        "color": "Marble Grey",
+        "storage": "256GB",
+        "price": {
+          "mrp": 84999,
+          "selling_price": 79999,
+          "currency": "INR",
+          "discount_percentage": 5.9
+        },
+        "stock_quantity": 85
+      }
+    ],
+    "display": {
+      "type": "Dynamic AMOLED 2X",
+      "size_inches": 6.2,
+      "resolution": "2340 x 1080",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto",
+          "megapixels": 10,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 12,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4000,
+      "charging": "25W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with One UI 6.1"
+    },
+    "dimensions": {
+      "height_mm": 147.0,
+      "width_mm": 70.6,
+      "thickness_mm": 7.6,
+      "weight_g": 167
+    },
+    "ratings": {
+      "average_rating": 4.5,
+      "total_reviews": 14200
+    },
+    "rating_breakdown": {
+      "5_star": 8900,
+      "4_star": 3200,
+      "3_star": 1200,
+      "2_star": 500,
+      "1_star": 400
+    },
+    "reviews": [
+      {
+        "review_id": "rev_40001",
+        "user_name": "Deepika Iyer",
+        "rating": 5,
+        "title": "Best compact Android flagship",
+        "review_text": "Galaxy AI features are genuinely useful. Camera quality rivals iPhone and the display is gorgeous. Perfect size for one-hand use.",
+        "verified_purchase": true,
+        "helpful_votes": 210,
+        "review_date": "2025-01-05"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "samsung",
+        "android",
+        "5g",
+        "ai",
+        "compact"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/galaxys24-front.jpg",
+      "https://example.com/products/galaxys24-back.jpg"
+    ],
+    "created_at": "2024-01-17T10:00:00Z",
+    "updated_at": "2025-01-12T08:00:00Z"
+  },
+  {
+    "product_id": "prod_oneplus_12",
+    "name": "OnePlus 12",
+    "slug": "oneplus-12",
+    "brand": "OnePlus",
+    "category": "Smartphones",
+    "model_number": "CPH2583",
+    "release_year": 2024,
+    "description": "OnePlus 12 with Snapdragon 8 Gen 3, Hasselblad-tuned 50MP triple camera, and 100W SUPERVOOC fast charging.",
+    "highlights": [
+      "Hasselblad triple camera with 50MP main",
+      "Snapdragon 8 Gen 3 processor",
+      "6.82-inch 2K LTPO AMOLED 120Hz",
+      "100W SUPERVOOC wired fast charging",
+      "50W AIRVOOC wireless charging"
+    ],
+    "options": {
+      "color": [
+        "Silky Black",
+        "Flowy Emerald"
+      ],
+      "storage": [
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_op12_black_256",
+        "color": "Silky Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 64999,
+          "selling_price": 59999,
+          "currency": "INR",
+          "discount_percentage": 7.7
+        },
+        "stock_quantity": 200
+      },
+      {
+        "sku_id": "sku_op12_green_512",
+        "color": "Flowy Emerald",
+        "storage": "512GB",
+        "price": {
+          "mrp": 74999,
+          "selling_price": 69999,
+          "currency": "INR",
+          "discount_percentage": 6.7
+        },
+        "stock_quantity": 120
+      }
+    ],
+    "display": {
+      "type": "LTPO AMOLED",
+      "size_inches": 6.82,
+      "resolution": "3168 x 1440",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.6"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 48,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto",
+          "megapixels": 64,
+          "aperture": "f/2.6"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5400,
+      "charging": "100W wired, 50W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with OxygenOS 14"
+    },
+    "dimensions": {
+      "height_mm": 164.3,
+      "width_mm": 75.8,
+      "thickness_mm": 9.15,
+      "weight_g": 220
+    },
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 9800
+    },
+    "rating_breakdown": {
+      "5_star": 6800,
+      "4_star": 2100,
+      "3_star": 600,
+      "2_star": 180,
+      "1_star": 120
+    },
+    "reviews": [
+      {
+        "review_id": "rev_50001",
+        "user_name": "Vikram Singh",
+        "rating": 5,
+        "title": "100W charging in 26 minutes is unreal",
+        "review_text": "100W charging fills the phone from 0 to 100 in 26 mins. Hasselblad camera colours are natural and accurate. Great display.",
+        "verified_purchase": true,
+        "helpful_votes": 330,
+        "review_date": "2024-11-15"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "oneplus",
+        "hasselblad",
+        "fast-charging",
+        "flagship"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_oneplus_india",
+      "seller_name": "OnePlus Official Store",
+      "seller_rating": 4.6
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/oneplus12-front.jpg",
+      "https://example.com/products/oneplus12-back.jpg"
+    ],
+    "created_at": "2024-01-23T09:00:00Z",
+    "updated_at": "2025-01-08T07:00:00Z"
+  },
+  {
+    "product_id": "prod_google_pixel_9_pro",
+    "name": "Google Pixel 9 Pro",
+    "slug": "google-pixel-9-pro",
+    "brand": "Google",
+    "category": "Smartphones",
+    "model_number": "GA05652",
+    "release_year": 2024,
+    "description": "Google Pixel 9 Pro with Tensor G4 chip, 50MP triple camera with 5x telephoto, and Gemini AI built-in.",
+    "highlights": [
+      "Google Tensor G4 chip",
+      "50MP main camera with 5x telephoto zoom",
+      "6.3-inch LTPO OLED Super Actua 120Hz",
+      "Gemini AI built-in across all apps",
+      "7 years of OS and security updates"
+    ],
+    "options": {
+      "color": [
+        "Obsidian",
+        "Porcelain",
+        "Hazel",
+        "Rose Quartz"
+      ],
+      "storage": [
+        "128GB",
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_p9pro_obsidian_256",
+        "color": "Obsidian",
+        "storage": "256GB",
+        "price": {
+          "mrp": 109999,
+          "selling_price": 99999,
+          "currency": "INR",
+          "discount_percentage": 9.1
+        },
+        "stock_quantity": 75
+      },
+      {
+        "sku_id": "sku_p9pro_hazel_512",
+        "color": "Hazel",
+        "storage": "512GB",
+        "price": {
+          "mrp": 124999,
+          "selling_price": 114999,
+          "currency": "INR",
+          "discount_percentage": 8.0
+        },
+        "stock_quantity": 50
+      }
+    ],
+    "display": {
+      "type": "LTPO OLED",
+      "size_inches": 6.3,
+      "resolution": "2856 x 1280",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Google Tensor G4",
+      "cpu": "9-core CPU",
+      "gpu": "Immortalis-G715"
+    },
+    "memory": {
+      "ram": "16GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.68"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 48,
+          "aperture": "f/1.7"
+        },
+        {
+          "type": "Telephoto 5x",
+          "megapixels": 48,
+          "aperture": "f/2.8"
+        }
+      ],
+      "front": {
+        "megapixels": 42,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4700,
+      "charging": "37W wired, 23W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 15"
+    },
+    "dimensions": {
+      "height_mm": 152.8,
+      "width_mm": 72.0,
+      "thickness_mm": 8.5,
+      "weight_g": 199
+    },
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 8900
+    },
+    "rating_breakdown": {
+      "5_star": 6000,
+      "4_star": 1900,
+      "3_star": 600,
+      "2_star": 250,
+      "1_star": 150
+    },
+    "reviews": [
+      {
+        "review_id": "rev_60001",
+        "user_name": "Neha Joshi",
+        "rating": 5,
+        "title": "Gemini AI integration is a game changer",
+        "review_text": "Gemini integration is seamless across all apps. 7 years of updates is a major selling point for long-term value.",
+        "verified_purchase": true,
+        "helpful_votes": 275,
+        "review_date": "2024-10-30"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "google",
+        "pixel",
+        "gemini-ai",
+        "5x-zoom",
+        "stock-android"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_google_india",
+      "seller_name": "Google Store India",
+      "seller_rating": 4.5
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/pixel9pro-front.jpg",
+      "https://example.com/products/pixel9pro-back.jpg"
+    ],
+    "created_at": "2024-08-13T10:00:00Z",
+    "updated_at": "2024-12-15T06:00:00Z"
+  },
+  {
+    "product_id": "prod_xiaomi_14_ultra",
+    "name": "Xiaomi 14 Ultra",
+    "slug": "xiaomi-14-ultra",
+    "brand": "Xiaomi",
+    "category": "Smartphones",
+    "model_number": "24030PN60G",
+    "release_year": 2024,
+    "description": "Xiaomi 14 Ultra with Leica quad camera featuring 1-inch Sony LYT-900 sensor and Snapdragon 8 Gen 3.",
+    "highlights": [
+      "Leica quad camera with 1-inch Sony LYT-900 sensor",
+      "Snapdragon 8 Gen 3 processor",
+      "6.73-inch LTPO AMOLED 120Hz display",
+      "90W HyperCharge and 80W wireless charging",
+      "IP68 water and dust resistance"
+    ],
+    "options": {
+      "color": [
+        "Black",
+        "White",
+        "Desert Titanium"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_xi14u_black_256",
+        "color": "Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 99999,
+          "selling_price": 94999,
+          "currency": "INR",
+          "discount_percentage": 5.0
+        },
+        "stock_quantity": 80
+      },
+      {
+        "sku_id": "sku_xi14u_white_512",
+        "color": "White",
+        "storage": "512GB",
+        "price": {
+          "mrp": 109999,
+          "selling_price": 104999,
+          "currency": "INR",
+          "discount_percentage": 4.5
+        },
+        "stock_quantity": 55
+      }
+    ],
+    "display": {
+      "type": "LTPO AMOLED",
+      "size_inches": 6.73,
+      "resolution": "3200 x 1440",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "16GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main 1-inch",
+          "megapixels": 50,
+          "aperture": "f/1.63"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Telephoto 3.2x",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Telephoto 5x",
+          "megapixels": 50,
+          "aperture": "f/2.5"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.0"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "90W wired, 80W wireless, 10W reverse"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with HyperOS"
+    },
+    "dimensions": {
+      "height_mm": 161.4,
+      "width_mm": 75.3,
+      "thickness_mm": 9.35,
+      "weight_g": 229
+    },
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 6200
+    },
+    "rating_breakdown": {
+      "5_star": 4500,
+      "4_star": 1200,
+      "3_star": 350,
+      "2_star": 100,
+      "1_star": 50
+    },
+    "reviews": [
+      {
+        "review_id": "rev_70001",
+        "user_name": "Suresh Pillai",
+        "rating": 5,
+        "title": "1-inch Leica sensor is in a class of its own",
+        "review_text": "The 1-inch sensor captures light like a compact camera. Leica authentic color modes produce jaw-dropping portrait shots. Best camera phone right now.",
+        "verified_purchase": true,
+        "helpful_votes": 380,
+        "review_date": "2025-01-02"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "xiaomi",
+        "leica",
+        "1-inch-sensor",
+        "ultra",
+        "flagship"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_xiaomi_india",
+      "seller_name": "Xiaomi Official Store",
+      "seller_rating": 4.4
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/xiaomi14ultra-front.jpg",
+      "https://example.com/products/xiaomi14ultra-back.jpg"
+    ],
+    "created_at": "2024-02-25T10:00:00Z",
+    "updated_at": "2025-01-05T09:00:00Z"
+  },
+  {
+    "product_id": "prod_nothing_phone_2a",
+    "name": "Nothing Phone (2a)",
+    "slug": "nothing-phone-2a",
+    "brand": "Nothing",
+    "category": "Smartphones",
+    "model_number": "A142",
+    "release_year": 2024,
+    "description": "Nothing Phone (2a) with unique Glyph Interface, Dimensity 7200 Pro, and a 6.7-inch AMOLED display.",
+    "highlights": [
+      "Unique Glyph Interface LED lighting system",
+      "Dimensity 7200 Pro processor",
+      "6.7-inch AMOLED 120Hz display",
+      "50MP dual rear cameras",
+      "45W fast charging with 5000mAh battery"
+    ],
+    "options": {
+      "color": [
+        "Black",
+        "White",
+        "Blue Special Edition"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_np2a_black_128",
+        "color": "Black",
+        "storage": "128GB",
+        "price": {
+          "mrp": 24999,
+          "selling_price": 23499,
+          "currency": "INR",
+          "discount_percentage": 6.0
+        },
+        "stock_quantity": 300
+      },
+      {
+        "sku_id": "sku_np2a_white_256",
+        "color": "White",
+        "storage": "256GB",
+        "price": {
+          "mrp": 27999,
+          "selling_price": 26499,
+          "currency": "INR",
+          "discount_percentage": 5.4
+        },
+        "stock_quantity": 250
+      }
+    ],
+    "display": {
+      "type": "AMOLED",
+      "size_inches": 6.7,
+      "resolution": "2412 x 1084",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Dimensity 7200 Pro",
+      "cpu": "8-core CPU",
+      "gpu": "Mali-G610"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.88"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 50,
+          "aperture": "f/2.2"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "45W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with Nothing OS 2.5"
+    },
+    "dimensions": {
+      "height_mm": 161.7,
+      "width_mm": 76.3,
+      "thickness_mm": 8.6,
+      "weight_g": 190
+    },
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 8900
+    },
+    "rating_breakdown": {
+      "5_star": 5200,
+      "4_star": 2300,
+      "3_star": 900,
+      "2_star": 300,
+      "1_star": 200
+    },
+    "reviews": [
+      {
+        "review_id": "rev_80001",
+        "user_name": "Ishaan Tiwari",
+        "rating": 5,
+        "title": "Most unique phone in its price range",
+        "review_text": "Glyph Interface is not just a gimmick - genuinely useful for call alerts. Great performance at this price point.",
+        "verified_purchase": true,
+        "helpful_votes": 280,
+        "review_date": "2024-09-01"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "nothing",
+        "glyph",
+        "unique-design",
+        "value",
+        "mid-range"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_nothing_india",
+      "seller_name": "Nothing Official Store",
+      "seller_rating": 4.4
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/nothingphone2a-front.jpg",
+      "https://example.com/products/nothingphone2a-back.jpg"
+    ],
+    "created_at": "2024-03-05T10:00:00Z",
+    "updated_at": "2024-11-01T08:00:00Z"
+  },
+  {
+    "product_id": "prod_realme_gt_6t",
+    "name": "Realme GT 6T",
+    "slug": "realme-gt-6t",
+    "brand": "Realme",
+    "category": "Smartphones",
+    "model_number": "RMX3853",
+    "release_year": 2024,
+    "description": "Realme GT 6T with Snapdragon 7+ Gen 3, 120W SUPERVOOC, 6.78-inch AMOLED 120Hz, and 50MP OIS camera.",
+    "highlights": [
+      "Snapdragon 7+ Gen 3 chip",
+      "120W SUPERVOOC fast charging",
+      "6.78-inch AMOLED 120Hz display",
+      "50MP OIS main camera",
+      "5500mAh large battery"
+    ],
+    "options": {
+      "color": [
+        "Fluid Silver",
+        "Turbo Red",
+        "Razor Green"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_gt6t_silver_128",
+        "color": "Fluid Silver",
+        "storage": "128GB",
+        "price": {
+          "mrp": 29999,
+          "selling_price": 26999,
+          "currency": "INR",
+          "discount_percentage": 10.0
+        },
+        "stock_quantity": 280
+      },
+      {
+        "sku_id": "sku_gt6t_red_256",
+        "color": "Turbo Red",
+        "storage": "256GB",
+        "price": {
+          "mrp": 33999,
+          "selling_price": 30999,
+          "currency": "INR",
+          "discount_percentage": 8.8
+        },
+        "stock_quantity": 210
+      }
+    ],
+    "display": {
+      "type": "AMOLED",
+      "size_inches": 6.78,
+      "resolution": "2780 x 1264",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 7+ Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 732"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 8,
+          "aperture": "f/2.2"
+        }
+      ],
+      "front": {
+        "megapixels": 16,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5500,
+      "charging": "120W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with Realme UI 5.0"
+    },
+    "dimensions": {
+      "height_mm": 162.0,
+      "width_mm": 74.5,
+      "thickness_mm": 8.1,
+      "weight_g": 197
+    },
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 7100
+    },
+    "rating_breakdown": {
+      "5_star": 4100,
+      "4_star": 1900,
+      "3_star": 700,
+      "2_star": 250,
+      "1_star": 150
+    },
+    "reviews": [
+      {
+        "review_id": "rev_90001",
+        "user_name": "Pranav Das",
+        "rating": 5,
+        "title": "Best value phone under 30k",
+        "review_text": "120W charging fills the 5500mAh battery in about 25 minutes. Snapdragon 7+ Gen 3 handles gaming flawlessly. Excellent value.",
+        "verified_purchase": true,
+        "helpful_votes": 210,
+        "review_date": "2024-11-10"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": true,
+      "tags": [
+        "realme",
+        "value",
+        "120w-charging",
+        "5g",
+        "gaming"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_realme_india",
+      "seller_name": "Realme Official Store",
+      "seller_rating": 4.3
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/realmegt6t-front.jpg",
+      "https://example.com/products/realmegt6t-back.jpg"
+    ],
+    "created_at": "2024-05-20T09:00:00Z",
+    "updated_at": "2024-12-10T10:00:00Z"
+  },
+  {
+    "product_id": "prod_motorola_razr_50_ultra",
+    "name": "Motorola Razr 50 Ultra",
+    "slug": "motorola-razr-50-ultra",
+    "brand": "Motorola",
+    "category": "Smartphones",
+    "model_number": "XT2451-1",
+    "release_year": 2024,
+    "description": "Motorola Razr 50 Ultra flip foldable with Snapdragon 8s Gen 3, large 4-inch external cover screen, and 50MP cameras.",
+    "highlights": [
+      "4-inch large external cover pOLED display",
+      "6.9-inch internal LTPO AMOLED 165Hz",
+      "Snapdragon 8s Gen 3 processor",
+      "50MP main camera with OIS",
+      "Compact flip foldable design"
+    ],
+    "options": {
+      "color": [
+        "Midnight Blue",
+        "Peach Fuzz",
+        "Spring Green"
+      ],
+      "storage": [
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_razr50u_blue_256",
+        "color": "Midnight Blue",
+        "storage": "256GB",
+        "price": {
+          "mrp": 99999,
+          "selling_price": 89999,
+          "currency": "INR",
+          "discount_percentage": 10.0
+        },
+        "stock_quantity": 65
+      },
+      {
+        "sku_id": "sku_razr50u_peach_512",
+        "color": "Peach Fuzz",
+        "storage": "512GB",
+        "price": {
+          "mrp": 109999,
+          "selling_price": 99999,
+          "currency": "INR",
+          "discount_percentage": 9.1
+        },
+        "stock_quantity": 45
+      }
+    ],
+    "display": {
+      "type": "LTPO AMOLED (internal)",
+      "size_inches": 6.9,
+      "resolution": "2640 x 1080",
+      "refresh_rate_hz": 165
+    },
+    "processor": {
+      "chipset": "Snapdragon 8s Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 735"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 50,
+          "aperture": "f/2.2"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4000,
+      "charging": "45W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14"
+    },
+    "dimensions": {
+      "height_mm": 88.1,
+      "width_mm": 74.0,
+      "thickness_mm": 15.8,
+      "weight_g": 189
+    },
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 3600
+    },
+    "rating_breakdown": {
+      "5_star": 2300,
+      "4_star": 850,
+      "3_star": 300,
+      "2_star": 90,
+      "1_star": 60
+    },
+    "reviews": [
+      {
+        "review_id": "rev_100001",
+        "user_name": "Shruti Mehta",
+        "rating": 5,
+        "title": "Best flip phone for daily use",
+        "review_text": "Large cover screen means I rarely open the phone. Fashion-forward design gets compliments. Camera quality is excellent for a foldable.",
+        "verified_purchase": true,
+        "helpful_votes": 195,
+        "review_date": "2024-09-15"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "motorola",
+        "razr",
+        "flip-phone",
+        "foldable",
+        "fashion"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_motorola_india",
+      "seller_name": "Motorola Official Store",
+      "seller_rating": 4.3
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/razr50ultra-closed.jpg",
+      "https://example.com/products/razr50ultra-open.jpg"
+    ],
+    "created_at": "2024-06-24T09:00:00Z",
+    "updated_at": "2024-11-20T07:00:00Z"
+  },
+  {
+    "product_id": "prod_vivo_x100_pro",
+    "name": "Vivo X100 Pro",
+    "slug": "vivo-x100-pro",
+    "brand": "Vivo",
+    "category": "Smartphones",
+    "model_number": "V2311",
+    "release_year": 2023,
+    "description": "Vivo X100 Pro with Dimensity 9300, ZEISS APO telephoto, 50MP triple camera, and 100W FlashCharge.",
+    "highlights": [
+      "ZEISS APO Telephoto 4.3x 64MP camera",
+      "Dimensity 9300 flagship processor",
+      "6.78-inch LTPO AMOLED 120Hz display",
+      "100W FlashCharge and 50W wireless",
+      "IP68 water and dust resistance"
+    ],
+    "options": {
+      "color": [
+        "Asteroid Black",
+        "Stardust White"
+      ],
+      "storage": [
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_x100p_black_256",
+        "color": "Asteroid Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 89999,
+          "selling_price": 84999,
+          "currency": "INR",
+          "discount_percentage": 5.6
+        },
+        "stock_quantity": 95
+      },
+      {
+        "sku_id": "sku_x100p_white_512",
+        "color": "Stardust White",
+        "storage": "512GB",
+        "price": {
+          "mrp": 99999,
+          "selling_price": 94999,
+          "currency": "INR",
+          "discount_percentage": 5.0
+        },
+        "stock_quantity": 60
+      }
+    ],
+    "display": {
+      "type": "LTPO AMOLED",
+      "size_inches": 6.78,
+      "resolution": "2800 x 1260",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Dimensity 9300",
+      "cpu": "8-core CPU",
+      "gpu": "Immortalis-G720"
+    },
+    "memory": {
+      "ram": "16GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.57"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 50,
+          "aperture": "f/2.0"
+        },
+        {
+          "type": "ZEISS APO Telephoto",
+          "megapixels": 64,
+          "aperture": "f/2.57"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.0"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5400,
+      "charging": "100W wired, 50W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with OriginOS 4"
+    },
+    "dimensions": {
+      "height_mm": 164.9,
+      "width_mm": 75.9,
+      "thickness_mm": 9.5,
+      "weight_g": 225
+    },
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 5100
+    },
+    "rating_breakdown": {
+      "5_star": 3400,
+      "4_star": 1100,
+      "3_star": 380,
+      "2_star": 140,
+      "1_star": 80
+    },
+    "reviews": [
+      {
+        "review_id": "rev_110001",
+        "user_name": "Rohan Desai",
+        "rating": 5,
+        "title": "ZEISS APO telephoto is cinematic quality",
+        "review_text": "APO lens eliminates chromatic aberration completely. Portrait shots have a creamy bokeh like a professional lens. One of the best camera phones.",
+        "verified_purchase": true,
+        "helpful_votes": 260,
+        "review_date": "2024-08-20"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "vivo",
+        "zeiss",
+        "apo-telephoto",
+        "flagship",
+        "ip68"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_vivo_india",
+      "seller_name": "Vivo Official Store",
+      "seller_rating": 4.3
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/vivox100pro-front.jpg",
+      "https://example.com/products/vivox100pro-back.jpg"
+    ],
+    "created_at": "2023-11-22T10:00:00Z",
+    "updated_at": "2024-12-05T08:00:00Z"
+  },
+  {
+    "product_id": "prod_asus_rog_phone_8_pro",
+    "name": "ASUS ROG Phone 8 Pro",
+    "slug": "asus-rog-phone-8-pro",
+    "brand": "ASUS",
+    "category": "Smartphones",
+    "model_number": "AI2401",
+    "release_year": 2024,
+    "description": "ASUS ROG Phone 8 Pro gaming smartphone with Snapdragon 8 Gen 3 overclocked, 165Hz AMOLED, and Aero Sensor.",
+    "highlights": [
+      "Snapdragon 8 Gen 3 overclocked to 3.3GHz",
+      "6.78-inch Samsung AMOLED 165Hz display",
+      "ROG AeroActive Cooler 8 compatible",
+      "50MP Sony IMX890 main camera",
+      "Rear Aero touch sensors for gaming"
+    ],
+    "options": {
+      "color": [
+        "Phantom Black",
+        "Storm White"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_rogp8pro_black_256",
+        "color": "Phantom Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 89999,
+          "selling_price": 82999,
+          "currency": "INR",
+          "discount_percentage": 7.8
+        },
+        "stock_quantity": 50
+      },
+      {
+        "sku_id": "sku_rogp8pro_white_512",
+        "color": "Storm White",
+        "storage": "512GB",
+        "price": {
+          "mrp": 99999,
+          "selling_price": 91999,
+          "currency": "INR",
+          "discount_percentage": 8.0
+        },
+        "stock_quantity": 35
+      }
+    ],
+    "display": {
+      "type": "Samsung AMOLED",
+      "size_inches": 6.78,
+      "resolution": "2400 x 1080",
+      "refresh_rate_hz": 165
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3 (overclocked)",
+      "cpu": "8-core CPU 3.3GHz",
+      "gpu": "Adreno 750 (overclocked)"
+    },
+    "memory": {
+      "ram": "16GB LPDDR5X"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.9"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 13,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Macro",
+          "megapixels": 5,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.45"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5500,
+      "charging": "65W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with ROG UI"
+    },
+    "dimensions": {
+      "height_mm": 163.8,
+      "width_mm": 76.8,
+      "thickness_mm": 8.9,
+      "weight_g": 225
+    },
+    "ratings": {
+      "average_rating": 4.6,
+      "total_reviews": 2900
+    },
+    "rating_breakdown": {
+      "5_star": 2000,
+      "4_star": 600,
+      "3_star": 200,
+      "2_star": 70,
+      "1_star": 30
+    },
+    "reviews": [
+      {
+        "review_id": "rev_120001",
+        "user_name": "Dev Malhotra",
+        "rating": 5,
+        "title": "Absolute beast for mobile gaming",
+        "review_text": "165Hz display makes gaming smoother than anything else. Overclocked Snapdragon never throttles. AeroActive Cooler keeps temperatures in check.",
+        "verified_purchase": true,
+        "helpful_votes": 295,
+        "review_date": "2024-03-20"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "asus",
+        "rog",
+        "gaming-phone",
+        "165hz",
+        "overclocked"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_asus_india",
+      "seller_name": "ASUS Official Store",
+      "seller_rating": 4.5
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/rogphone8pro-front.jpg",
+      "https://example.com/products/rogphone8pro-back.jpg"
+    ],
+    "created_at": "2024-01-18T10:00:00Z",
+    "updated_at": "2025-01-05T09:00:00Z"
+  },
+  {
+    "product_id": "prod_redmi_note_13_pro_plus",
+    "name": "Redmi Note 13 Pro+",
+    "slug": "redmi-note-13-pro-plus",
+    "brand": "Redmi",
+    "category": "Smartphones",
+    "model_number": "23117RA66G",
+    "release_year": 2024,
+    "description": "Redmi Note 13 Pro+ with 200MP OIS camera, Dimensity 7200 Ultra, 120W HyperCharge, and IP68 at incredible value.",
+    "highlights": [
+      "200MP main camera with OIS",
+      "Dimensity 7200 Ultra processor",
+      "6.67-inch curved AMOLED 120Hz",
+      "120W HyperCharge in 19 minutes",
+      "IP68 water and dust resistance"
+    ],
+    "options": {
+      "color": [
+        "Midnight Black",
+        "Aurora Purple",
+        "Fusion White"
+      ],
+      "storage": [
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_rn13pp_black_256",
+        "color": "Midnight Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 34999,
+          "selling_price": 31999,
+          "currency": "INR",
+          "discount_percentage": 8.6
+        },
+        "stock_quantity": 260
+      },
+      {
+        "sku_id": "sku_rn13pp_purple_512",
+        "color": "Aurora Purple",
+        "storage": "512GB",
+        "price": {
+          "mrp": 39999,
+          "selling_price": 36999,
+          "currency": "INR",
+          "discount_percentage": 7.5
+        },
+        "stock_quantity": 180
+      }
+    ],
+    "display": {
+      "type": "AMOLED",
+      "size_inches": 6.67,
+      "resolution": "2712 x 1220",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Dimensity 7200 Ultra",
+      "cpu": "8-core CPU",
+      "gpu": "Mali-G610"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 200,
+          "aperture": "f/1.65"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 8,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Macro",
+          "megapixels": 2,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 16,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4820,
+      "charging": "120W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 13 with MIUI 14"
+    },
+    "dimensions": {
+      "height_mm": 161.4,
+      "width_mm": 74.2,
+      "thickness_mm": 8.9,
+      "weight_g": 204
+    },
+    "ratings": {
+      "average_rating": 4.5,
+      "total_reviews": 18900
+    },
+    "rating_breakdown": {
+      "5_star": 12000,
+      "4_star": 4500,
+      "3_star": 1600,
+      "2_star": 500,
+      "1_star": 300
+    },
+    "reviews": [
+      {
+        "review_id": "rev_130001",
+        "user_name": "Chetan Bhatt",
+        "rating": 5,
+        "title": "200MP and IP68 under 35k - unreal value",
+        "review_text": "200MP camera detail is mind-blowing. 120W charges fully in 20 minutes. IP68 on a budget phone is exceptional. Best value phone in India.",
+        "verified_purchase": true,
+        "helpful_votes": 580,
+        "review_date": "2024-09-10"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": [
+        "redmi",
+        "200mp",
+        "120w-charging",
+        "ip68",
+        "best-value"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_xiaomi_india",
+      "seller_name": "Xiaomi Official Store",
+      "seller_rating": 4.4
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/rn13proplus-front.jpg",
+      "https://example.com/products/rn13proplus-back.jpg"
+    ],
+    "created_at": "2024-01-11T10:00:00Z",
+    "updated_at": "2024-12-25T08:00:00Z"
+  },
+  {
+    "product_id": "prod_samsung_galaxy_z_fold_6",
+    "name": "Samsung Galaxy Z Fold 6",
+    "slug": "samsung-galaxy-z-fold-6",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-F956BZKGINS",
+    "release_year": 2024,
+    "description": "Samsung Galaxy Z Fold 6 with Snapdragon 8 Gen 3, 7.6-inch foldable display, S Pen support, and Galaxy AI.",
+    "highlights": [
+      "7.6-inch inner foldable Dynamic AMOLED 2X",
+      "6.3-inch cover Dynamic AMOLED 2X display",
+      "Snapdragon 8 Gen 3 processor",
+      "S Pen Fold Edition compatible",
+      "Galaxy AI for multitasking productivity"
+    ],
+    "options": {
+      "color": [
+        "Crafted Black",
+        "Silver Shadow",
+        "Pink",
+        "Navy"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_zfold6_black_256",
+        "color": "Crafted Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 164999,
+          "selling_price": 154999,
+          "currency": "INR",
+          "discount_percentage": 6.1
+        },
+        "stock_quantity": 35
+      },
+      {
+        "sku_id": "sku_zfold6_silver_512",
+        "color": "Silver Shadow",
+        "storage": "512GB",
+        "price": {
+          "mrp": 184999,
+          "selling_price": 174999,
+          "currency": "INR",
+          "discount_percentage": 5.4
+        },
+        "stock_quantity": 25
+      }
+    ],
+    "display": {
+      "type": "Dynamic AMOLED 2X (foldable)",
+      "size_inches": 7.6,
+      "resolution": "2160 x 1856",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto 3x",
+          "megapixels": 10,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 10,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4400,
+      "charging": "25W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with One UI 6.1.1"
+    },
+    "dimensions": {
+      "height_mm": 132.1,
+      "width_mm": 68.1,
+      "thickness_mm": 12.1,
+      "weight_g": 239
+    },
+    "ratings": {
+      "average_rating": 4.5,
+      "total_reviews": 4100
+    },
+    "rating_breakdown": {
+      "5_star": 2700,
+      "4_star": 900,
+      "3_star": 320,
+      "2_star": 110,
+      "1_star": 70
+    },
+    "reviews": [
+      {
+        "review_id": "rev_140001",
+        "user_name": "Gaurav Sehgal",
+        "rating": 5,
+        "title": "The future of smartphones is here",
+        "review_text": "Using two apps side by side on the large display is a productivity game-changer. Galaxy AI on fold is incredibly useful. Build quality is greatly improved.",
+        "verified_purchase": true,
+        "helpful_votes": 320,
+        "review_date": "2024-08-10"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "samsung",
+        "foldable",
+        "z-fold",
+        "s-pen",
+        "productivity"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/zfold6-closed.jpg",
+      "https://example.com/products/zfold6-open.jpg"
+    ],
+    "created_at": "2024-07-10T10:00:00Z",
+    "updated_at": "2025-01-08T09:00:00Z"
+  },
+  {
+    "product_id": "prod_poco_x6_pro",
+    "name": "POCO X6 Pro 5G",
+    "slug": "poco-x6-pro-5g",
+    "brand": "POCO",
+    "category": "Smartphones",
+    "model_number": "2311DRK48G",
+    "release_year": 2024,
+    "description": "POCO X6 Pro 5G with Dimensity 8300-Ultra, 64MP triple camera, 6.67-inch AMOLED 144Hz, and 67W fast charging.",
+    "highlights": [
+      "Dimensity 8300-Ultra processor",
+      "6.67-inch AMOLED 144Hz Flow display",
+      "64MP OIS main camera",
+      "67W Turbo Charging",
+      "LiquidCool Technology 4.0"
+    ],
+    "options": {
+      "color": [
+        "Yellow",
+        "Grey",
+        "Black"
+      ],
+      "storage": [
+        "256GB",
+        "512GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_x6pro_yellow_256",
+        "color": "Yellow",
+        "storage": "256GB",
+        "price": {
+          "mrp": 26999,
+          "selling_price": 24499,
+          "currency": "INR",
+          "discount_percentage": 9.3
+        },
+        "stock_quantity": 350
+      },
+      {
+        "sku_id": "sku_x6pro_black_256",
+        "color": "Black",
+        "storage": "256GB",
+        "price": {
+          "mrp": 26999,
+          "selling_price": 24499,
+          "currency": "INR",
+          "discount_percentage": 9.3
+        },
+        "stock_quantity": 300
+      }
+    ],
+    "display": {
+      "type": "AMOLED",
+      "size_inches": 6.67,
+      "resolution": "2712 x 1220",
+      "refresh_rate_hz": 144
+    },
+    "processor": {
+      "chipset": "Dimensity 8300-Ultra",
+      "cpu": "8-core CPU",
+      "gpu": "Mali-G615 MC6"
+    },
+    "memory": {
+      "ram": "12GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 64,
+          "aperture": "f/1.79"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 8,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Macro",
+          "megapixels": 2,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 16,
+        "aperture": "f/2.45"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "67W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with MIUI 14"
+    },
+    "dimensions": {
+      "height_mm": 160.5,
+      "width_mm": 74.3,
+      "thickness_mm": 8.2,
+      "weight_g": 186
+    },
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 22500
+    },
+    "rating_breakdown": {
+      "5_star": 13500,
+      "4_star": 6000,
+      "3_star": 1800,
+      "2_star": 700,
+      "1_star": 500
+    },
+    "reviews": [
+      {
+        "review_id": "rev_150001",
+        "user_name": "Tarun Gupta",
+        "rating": 5,
+        "title": "Gaming performance is unmatched under 25k",
+        "review_text": "Dimensity 8300-Ultra benchmarks higher than last-gen flagships. 144Hz AMOLED is buttery smooth. Liquid cooling keeps temps in check during gaming.",
+        "verified_purchase": true,
+        "helpful_votes": 680,
+        "review_date": "2024-07-25"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": true,
+      "tags": [
+        "poco",
+        "gaming",
+        "144hz",
+        "dimensity",
+        "value"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_xiaomi_india",
+      "seller_name": "Xiaomi Official Store",
+      "seller_rating": 4.4
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/pocox6pro-front.jpg",
+      "https://example.com/products/pocox6pro-back.jpg"
+    ],
+    "created_at": "2024-01-11T10:00:00Z",
+    "updated_at": "2024-12-20T08:00:00Z"
+  },
+  {
+    "product_id": "prod_iphone_se_3",
+    "name": "Apple iPhone SE (3rd Generation)",
+    "slug": "apple-iphone-se-3rd-gen",
+    "brand": "Apple",
+    "category": "Smartphones",
+    "model_number": "MMXK3HN/A",
+    "release_year": 2022,
+    "description": "Apple iPhone SE 3rd gen with A15 Bionic chip, 5G, and the classic 4.7-inch Touch ID form factor at an affordable price.",
+    "highlights": [
+      "A15 Bionic chip - same as iPhone 13",
+      "4.7-inch Retina HD IPS display",
+      "5G connectivity",
+      "Touch ID fingerprint sensor",
+      "Single 12MP main camera with OIS"
+    ],
+    "options": {
+      "color": [
+        "Midnight",
+        "Starlight",
+        "Product Red"
+      ],
+      "storage": [
+        "64GB",
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_ipse3_mid_64",
+        "color": "Midnight",
+        "storage": "64GB",
+        "price": {
+          "mrp": 49900,
+          "selling_price": 43900,
+          "currency": "INR",
+          "discount_percentage": 12.0
+        },
+        "stock_quantity": 200
+      },
+      {
+        "sku_id": "sku_ipse3_red_128",
+        "color": "Product Red",
+        "storage": "128GB",
+        "price": {
+          "mrp": 54900,
+          "selling_price": 48900,
+          "currency": "INR",
+          "discount_percentage": 10.9
+        },
+        "stock_quantity": 160
+      }
+    ],
+    "display": {
+      "type": "Retina HD IPS",
+      "size_inches": 4.7,
+      "resolution": "1334 x 750",
+      "refresh_rate_hz": 60
+    },
+    "processor": {
+      "chipset": "Apple A15 Bionic",
+      "cpu": "6-core CPU",
+      "gpu": "4-core GPU"
+    },
+    "memory": {
+      "ram": "4GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 12,
+          "aperture": "f/1.8"
+        }
+      ],
+      "front": {
+        "megapixels": 7,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 2018,
+      "charging": "20W wired, 7.5W Qi wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6",
+      "Bluetooth 5.0",
+      "Lightning",
+      "NFC"
+    ],
+    "os": {
+      "name": "iOS",
+      "version": "iOS 17"
+    },
+    "dimensions": {
+      "height_mm": 138.4,
+      "width_mm": 67.3,
+      "thickness_mm": 7.3,
+      "weight_g": 144
+    },
+    "ratings": {
+      "average_rating": 4.3,
+      "total_reviews": 11200
+    },
+    "rating_breakdown": {
+      "5_star": 6200,
+      "4_star": 3000,
+      "3_star": 1200,
+      "2_star": 500,
+      "1_star": 300
+    },
+    "reviews": [
+      {
+        "review_id": "rev_160001",
+        "user_name": "Sunita Desai",
+        "rating": 4,
+        "title": "Best small iPhone for those who hate large screens",
+        "review_text": "Finally a phone I can use with one hand. A15 Bionic is incredibly fast. Perfect for elderly parents or people who prefer simplicity.",
+        "verified_purchase": true,
+        "helpful_votes": 350,
+        "review_date": "2024-10-05"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": false,
+      "tags": [
+        "apple",
+        "iphone-se",
+        "compact",
+        "affordable",
+        "5g"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_applestore_india",
+      "seller_name": "Apple Authorized Store",
+      "seller_rating": 4.8
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/iphonese3-front.jpg",
+      "https://example.com/products/iphonese3-back.jpg"
+    ],
+    "created_at": "2022-03-18T10:00:00Z",
+    "updated_at": "2025-01-02T09:00:00Z"
+  },
+  {
+    "product_id": "prod_oneplus_nord_ce4",
+    "name": "OnePlus Nord CE 4",
+    "slug": "oneplus-nord-ce4",
+    "brand": "OnePlus",
+    "category": "Smartphones",
+    "model_number": "CPH2613",
+    "release_year": 2024,
+    "description": "OnePlus Nord CE 4 with Snapdragon 7 Gen 3, 100W SUPERVOOC, 6.7-inch AMOLED 120Hz at a mid-range price.",
+    "highlights": [
+      "Snapdragon 7 Gen 3 chipset",
+      "6.7-inch AMOLED 120Hz display",
+      "100W SUPERVOOC fast charging",
+      "50MP Sony LYT-600 main camera",
+      "Clean OxygenOS Android experience"
+    ],
+    "options": {
+      "color": [
+        "Celadon Marble",
+        "Dark Chrome"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_nce4_marble_128",
+        "color": "Celadon Marble",
+        "storage": "128GB",
+        "price": {
+          "mrp": 24999,
+          "selling_price": 22999,
+          "currency": "INR",
+          "discount_percentage": 8.0
+        },
+        "stock_quantity": 320
+      },
+      {
+        "sku_id": "sku_nce4_chrome_256",
+        "color": "Dark Chrome",
+        "storage": "256GB",
+        "price": {
+          "mrp": 27999,
+          "selling_price": 25999,
+          "currency": "INR",
+          "discount_percentage": 7.1
+        },
+        "stock_quantity": 260
+      }
+    ],
+    "display": {
+      "type": "AMOLED",
+      "size_inches": 6.7,
+      "resolution": "2412 x 1080",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 7 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 720"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Depth",
+          "megapixels": 2,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 16,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5500,
+      "charging": "100W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with OxygenOS 14.1"
+    },
+    "dimensions": {
+      "height_mm": 162.4,
+      "width_mm": 75.4,
+      "thickness_mm": 7.9,
+      "weight_g": 173
+    },
+    "ratings": {
+      "average_rating": 4.3,
+      "total_reviews": 13400
+    },
+    "rating_breakdown": {
+      "5_star": 7500,
+      "4_star": 3700,
+      "3_star": 1400,
+      "2_star": 500,
+      "1_star": 300
+    },
+    "reviews": [
+      {
+        "review_id": "rev_170001",
+        "user_name": "Rajan Bose",
+        "rating": 4,
+        "title": "100W charging on a budget phone is incredible",
+        "review_text": "100W charging at this price point is remarkable. Clean OxygenOS is refreshing. AMOLED display is vivid and great for media consumption.",
+        "verified_purchase": true,
+        "helpful_votes": 450,
+        "review_date": "2024-06-15"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": true,
+      "tags": [
+        "oneplus",
+        "nord",
+        "100w-charging",
+        "mid-range",
+        "clean-android"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_oneplus_india",
+      "seller_name": "OnePlus Official Store",
+      "seller_rating": 4.6
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/nordce4-front.jpg",
+      "https://example.com/products/nordce4-back.jpg"
+    ],
+    "created_at": "2024-04-01T10:00:00Z",
+    "updated_at": "2024-12-15T08:00:00Z"
+  },
+  {
+    "product_id": "prod_samsung_galaxy_a55",
+    "name": "Samsung Galaxy A55 5G",
+    "slug": "samsung-galaxy-a55-5g",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-A556EZKDINS",
+    "release_year": 2024,
+    "description": "Samsung Galaxy A55 5G with Exynos 1480, IP67 protection, 50MP OIS triple camera, and 5000mAh battery.",
+    "highlights": [
+      "Exynos 1480 4nm processor",
+      "6.6-inch Super AMOLED 120Hz display",
+      "50MP OIS main camera",
+      "IP67 water and dust resistance",
+      "5000mAh battery with 25W charging"
+    ],
+    "options": {
+      "color": [
+        "Awesome Navy",
+        "Awesome Iceblue",
+        "Awesome Lilac",
+        "Awesome Lemon"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_a55_navy_128",
+        "color": "Awesome Navy",
+        "storage": "128GB",
+        "price": {
+          "mrp": 39999,
+          "selling_price": 34999,
+          "currency": "INR",
+          "discount_percentage": 12.5
+        },
+        "stock_quantity": 250
+      },
+      {
+        "sku_id": "sku_a55_lilac_256",
+        "color": "Awesome Lilac",
+        "storage": "256GB",
+        "price": {
+          "mrp": 44999,
+          "selling_price": 39999,
+          "currency": "INR",
+          "discount_percentage": 11.1
+        },
+        "stock_quantity": 200
+      }
+    ],
+    "display": {
+      "type": "Super AMOLED",
+      "size_inches": 6.6,
+      "resolution": "2340 x 1080",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Exynos 1480",
+      "cpu": "8-core CPU",
+      "gpu": "Xclipse 530"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Macro",
+          "megapixels": 5,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "25W wired"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with One UI 6.1"
+    },
+    "dimensions": {
+      "height_mm": 161.1,
+      "width_mm": 77.1,
+      "thickness_mm": 8.2,
+      "weight_g": 213
+    },
+    "ratings": {
+      "average_rating": 4.4,
+      "total_reviews": 16800
+    },
+    "rating_breakdown": {
+      "5_star": 10000,
+      "4_star": 4500,
+      "3_star": 1500,
+      "2_star": 500,
+      "1_star": 300
+    },
+    "reviews": [
+      {
+        "review_id": "rev_180001",
+        "user_name": "Kavya Reddy",
+        "rating": 4,
+        "title": "Best mid-range Samsung with premium features",
+        "review_text": "IP67 protection at this price is impressive. OIS camera produces stable videos. 5 years of OS updates is a major long-term selling point.",
+        "verified_purchase": true,
+        "helpful_votes": 490,
+        "review_date": "2024-08-30"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": true,
+      "tags": [
+        "samsung",
+        "galaxy-a",
+        "ip67",
+        "ois",
+        "mid-range"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/galaxya55-front.jpg",
+      "https://example.com/products/galaxya55-back.jpg"
+    ],
+    "created_at": "2024-03-21T10:00:00Z",
+    "updated_at": "2025-01-07T08:00:00Z"
+  },
+  {
+    "product_id": "prod_oppo_find_x7_ultra",
+    "name": "OPPO Find X7 Ultra",
+    "slug": "oppo-find-x7-ultra",
+    "brand": "OPPO",
+    "category": "Smartphones",
+    "model_number": "OPH2589",
+    "release_year": 2024,
+    "description": "OPPO Find X7 Ultra with Snapdragon 8 Gen 3, dual periscope Hasselblad cameras, and 100W SUPERVOOC charging.",
+    "highlights": [
+      "Dual periscope Hasselblad cameras (3x and 6x)",
+      "Snapdragon 8 Gen 3 processor",
+      "6.82-inch LTPO AMOLED 120Hz display",
+      "100W SUPERVOOC and 50W AirVOOC wireless",
+      "IP68 water and dust resistance"
+    ],
+    "options": {
+      "color": [
+        "Titanium Grey",
+        "Titanium Brown",
+        "Sandy Beige"
+      ],
+      "storage": [
+        "256GB",
+        "512GB",
+        "1TB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_fx7u_grey_256",
+        "color": "Titanium Grey",
+        "storage": "256GB",
+        "price": {
+          "mrp": 94999,
+          "selling_price": 89999,
+          "currency": "INR",
+          "discount_percentage": 5.3
+        },
+        "stock_quantity": 55
+      },
+      {
+        "sku_id": "sku_fx7u_brown_512",
+        "color": "Titanium Brown",
+        "storage": "512GB",
+        "price": {
+          "mrp": 104999,
+          "selling_price": 99999,
+          "currency": "INR",
+          "discount_percentage": 4.8
+        },
+        "stock_quantity": 40
+      }
+    ],
+    "display": {
+      "type": "LTPO AMOLED",
+      "size_inches": 6.82,
+      "resolution": "3168 x 1440",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 3",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 750"
+    },
+    "memory": {
+      "ram": "16GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 50,
+          "aperture": "f/2.0"
+        },
+        {
+          "type": "Periscope Telephoto 3x",
+          "megapixels": 50,
+          "aperture": "f/2.6"
+        },
+        {
+          "type": "Periscope Telephoto 6x",
+          "megapixels": 50,
+          "aperture": "f/4.3"
+        }
+      ],
+      "front": {
+        "megapixels": 32,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 5000,
+      "charging": "100W wired, 50W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 7",
+      "Bluetooth 5.4",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with ColorOS 14"
+    },
+    "dimensions": {
+      "height_mm": 164.3,
+      "width_mm": 76.2,
+      "thickness_mm": 9.9,
+      "weight_g": 221
+    },
+    "ratings": {
+      "average_rating": 4.7,
+      "total_reviews": 3800
+    },
+    "rating_breakdown": {
+      "5_star": 2800,
+      "4_star": 700,
+      "3_star": 200,
+      "2_star": 70,
+      "1_star": 30
+    },
+    "reviews": [
+      {
+        "review_id": "rev_190001",
+        "user_name": "Vikrant Suri",
+        "rating": 5,
+        "title": "Dual periscope telephoto is unmatched",
+        "review_text": "Having both 3x and 6x periscope cameras is a revelation. Every zoom level is sharp with excellent Hasselblad colour science.",
+        "verified_purchase": true,
+        "helpful_votes": 215,
+        "review_date": "2025-01-03"
+      }
+    ],
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": false,
+      "tags": [
+        "oppo",
+        "dual-periscope",
+        "hasselblad",
+        "ultra",
+        "telephoto"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_oppo_india",
+      "seller_name": "OPPO India Official",
+      "seller_rating": 4.3
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/findx7ultra-front.jpg",
+      "https://example.com/products/findx7ultra-back.jpg"
+    ],
+    "created_at": "2024-01-08T10:00:00Z",
+    "updated_at": "2025-01-09T08:00:00Z"
+  },
+  {
+    "product_id": "prod_samsung_galaxy_s23_fe",
+    "name": "Samsung Galaxy S23 FE",
+    "slug": "samsung-galaxy-s23-fe",
+    "brand": "Samsung",
+    "category": "Smartphones",
+    "model_number": "SM-S711BZBAINS",
+    "release_year": 2023,
+    "description": "Samsung Galaxy S23 FE with Snapdragon 8 Gen 1, 50MP triple camera, IP68, and 4500mAh battery with 25W charging.",
+    "highlights": [
+      "Snapdragon 8 Gen 1 chipset",
+      "50MP main camera with OIS",
+      "6.4-inch Dynamic AMOLED 120Hz",
+      "IP68 water resistance",
+      "4500mAh with 25W and 15W wireless charging"
+    ],
+    "options": {
+      "color": [
+        "Graphite",
+        "Cream",
+        "Mint",
+        "Purple"
+      ],
+      "storage": [
+        "128GB",
+        "256GB"
+      ]
+    },
+    "skus": [
+      {
+        "sku_id": "sku_s23fe_graphite_128",
+        "color": "Graphite",
+        "storage": "128GB",
+        "price": {
+          "mrp": 49999,
+          "selling_price": 39999,
+          "currency": "INR",
+          "discount_percentage": 20.0
+        },
+        "stock_quantity": 200
+      },
+      {
+        "sku_id": "sku_s23fe_mint_256",
+        "color": "Mint",
+        "storage": "256GB",
+        "price": {
+          "mrp": 56999,
+          "selling_price": 46999,
+          "currency": "INR",
+          "discount_percentage": 17.5
+        },
+        "stock_quantity": 150
+      }
+    ],
+    "display": {
+      "type": "Dynamic AMOLED 2X",
+      "size_inches": 6.4,
+      "resolution": "2340 x 1080",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 1",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 730"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto",
+          "megapixels": 8,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 10,
+        "aperture": "f/2.4"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 4500,
+      "charging": "25W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 14 with One UI 6.0"
+    },
+    "dimensions": {
+      "height_mm": 158.0,
+      "width_mm": 76.5,
+      "thickness_mm": 8.4,
+      "weight_g": 209
+    },
+    "ratings": {
+      "average_rating": 4.3,
+      "total_reviews": 9200
+    },
+    "rating_breakdown": {
+      "5_star": 5200,
+      "4_star": 2400,
+      "3_star": 1000,
+      "2_star": 380,
+      "1_star": 220
+    },
+    "reviews": [
+      {
+        "review_id": "rev_200001",
+        "user_name": "Madhuri Singh",
+        "rating": 4,
+        "title": "Great fan edition - flagship chip at mid-range price",
+        "review_text": "Flagship Snapdragon chipset at mid-range price is excellent value. IP68 rating is premium. Camera output is solid. Display is gorgeous.",
+        "verified_purchase": true,
+        "helpful_votes": 240,
+        "review_date": "2024-07-30"
+      }
+    ],
+    "marketing": {
+      "is_featured": false,
+      "is_bestseller": true,
+      "tags": [
+        "samsung",
+        "galaxy-s",
+        "fan-edition",
+        "5g",
+        "ip68"
+      ]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    },
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "images": [
+      "https://example.com/products/s23fe-front.jpg",
+      "https://example.com/products/s23fe-back.jpg"
+    ],
+    "created_at": "2023-10-05T10:00:00Z",
+    "updated_at": "2024-11-01T08:00:00Z"
+  }
+]
