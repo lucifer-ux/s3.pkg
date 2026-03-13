@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug</title>
+    <script>
+        window.onerror = function(msg, url, line) {
+            document.body.innerHTML += '<p style="color:red">ERROR: ' + msg + '</p>';
+            return false;
+        };
+    </script>
+</head>
+<body>
+    <h1>Loading App...</h1>
+    <div id="debug-info"></div>
+    <script type="module">
+        try {
+            const root = document.getElementById('root');
+            document.getElementById('debug-info').innerHTML = 
+                '<p>Root element: ' + (root ? 'FOUND' : 'NOT FOUND') + '</p>' +
+                '<p>Location: ' + window.location.href + '</p>';
+        } catch(e) {
+            document.body.innerHTML += '<p style="color:red">Script error: ' + e.message + '</p>';
+        }
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
