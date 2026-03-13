@@ -4,7 +4,7 @@ import ProductDetailModal from './ProductDetailModal';
 import './ProductRecommendations.css';
 import productsData from '../products.json';
 
-function ProductRecommendations({ onCompare }) {
+function ProductRecommendations({ onCompare, onProductSelect }) {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [detailProductId, setDetailProductId] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -65,8 +65,8 @@ function ProductRecommendations({ onCompare }) {
   };
 
   const handleBuy = (product) => {
-    alert(`Proceeding to buy ${product.name}!`);
     handleCloseDetail();
+    onProductSelect?.(product);
   };
 
   return (

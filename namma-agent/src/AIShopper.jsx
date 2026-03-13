@@ -1,60 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot } from 'lucide-react';
+import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, User, Bot } from 'lucide-react';
 import QRScannerModal from './QRScannerModal';
 import VoiceInputModal from './VoiceInputModal';
 import ProductRecommendations from './ProductRecommendations';
-import ProductComparison from './ProductComparison';
-import ProductPurchaseScreen from './ProductPurchaseScreen';
 import './AIShopper.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-// API client for chat
-const chatApi = {
-  async sendMessage(messages) {
-    const response = await fetch(`${API_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
-    });
-    if (!response.ok) throw new Error('Failed to get response');
-    return response.json();
-  },
-
-  async *streamMessage(messages) {
-    const response = await fetch(`${API_URL}/api/chat/stream`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
-    });
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) yield parsed.content;
-          } catch (e) {
-            // ignore parse errors
-          }
-        }
-      }
-    }
-  }
-};
-
-function AIShopper() {
+function AIShopper({ onProductSelect }) {
   const [inputValue, setInputValue] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
@@ -71,10 +22,8 @@ function AIShopper() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectionState, setSelectionState] = useState(null);
   const [cartCount] = useState(2);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [showComparison, setShowComparison] = useState(false);
-  const [showPurchase, setShowPurchase] = useState(false);
-
+  const [showProducts, setShowProducts] = useState(false);
+  
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -108,68 +57,35 @@ function AIShopper() {
     handleSendMessage(category);
   };
 
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = (text) => {
     const messageText = text || inputValue.trim();
     if (!messageText) return;
 
+    // Add user message
     const userMessage = {
       id: Date.now(),
       text: messageText,
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
-
+    
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
-    try {
-      // Build message history for API (only user/assistant roles)
-      const apiMessages = messages
-        .filter(m => m.sender === 'user' || m.sender === 'assistant')
-        .map(m => ({
-          role: m.sender,
-          content: m.text
-        }));
-
-      // Add the new user message
-      apiMessages.push({
-        role: 'user',
-        content: messageText
-      });
-
-      // Create a placeholder for the streaming response
-      const aiMessageId = Date.now() + 1;
-      setMessages((prev) => [...prev, {
-        id: aiMessageId,
-        text: '',
-        sender: 'assistant',
-        timestamp: new Date().toISOString(),
-      }]);
-
-      // Stream the response
-      let fullText = '';
-      for await (const chunk of chatApi.streamMessage(apiMessages)) {
-        fullText += chunk;
-        setMessages((prev) =>
-          prev.map(m =>
-            m.id === aiMessageId
-              ? { ...m, text: fullText }
-              : m
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages((prev) => [...prev, {
-        id: Date.now() + 1,
-        text: 'Sorry, I had trouble connecting. Please try again.',
-        sender: 'assistant',
-        timestamp: new Date().toISOString(),
-      }]);
-    } finally {
+    // Mock AI response after delay
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: 'Got your message! To narrow down the best options for you, could you let me know your budget and which features you prioritize?',
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+        showSelections: true,
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+      setSelectionState({ step: 'price' });
+    }, 1500);
   };
 
   const handleSubmit = (e) => {
@@ -186,7 +102,7 @@ function AIShopper() {
     };
     setMessages((prev) => [...prev, selectionMessage]);
     setSelectionState({ step: 'features', selectedPrice: priceRange });
-
+    
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
@@ -210,7 +126,7 @@ function AIShopper() {
     };
     setMessages((prev) => [...prev, selectionMessage]);
     setSelectionState(null);
-
+    
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
@@ -219,37 +135,10 @@ function AIShopper() {
         text: 'Perfect! I\'ve noted your preferences. Here are some recommendations based on your selections.',
         sender: 'assistant',
         timestamp: new Date().toISOString(),
-        showProducts: true,
       };
       setMessages((prev) => [...prev, aiMessage]);
+      setShowProducts(true);
     }, 1000);
-  };
-
-  const handleCompare = (selectedIds) => {
-    setSelectedProducts(selectedIds);
-    setShowComparison(true);
-  };
-
-  const handleCloseComparison = () => {
-    setShowComparison(false);
-  };
-
-  const handleRemoveFromComparison = (productId) => {
-    setSelectedProducts((prev) => prev.filter((id) => id !== productId));
-  };
-
-  const handleBuyFromComparison = () => {
-    setShowComparison(false);
-    setShowPurchase(true);
-  };
-
-  const handleClosePurchase = () => {
-    setShowPurchase(false);
-  };
-
-  const handleFinalBuy = (product) => {
-    alert(`Successfully purchased ${product.name} for $${product.price}!`);
-    setShowPurchase(false);
   };
 
   const handleOpenScanner = () => {
@@ -262,6 +151,7 @@ function AIShopper() {
   };
 
   const handleScanSuccess = (decodedText) => {
+    console.log('Scanned QR Code data:', decodedText);
     setScannedData(decodedText);
     handleSendMessage(`Scanned product: ${decodedText}`);
   };
@@ -292,6 +182,7 @@ function AIShopper() {
 
   return (
     <div className="ai-shopper-container">
+      {/* Top Toolbar */}
       <div className="top-toolbar">
         <div className="toolbar-logo">
           <div className="logo-icon">
@@ -309,21 +200,24 @@ function AIShopper() {
         </div>
       </div>
 
+      {/* Messages Area */}
       <div className="messages-container">
+        {/* Welcome Header - Always visible at top */}
         <div className="header-section">
           <div className="avatar-container">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
-              alt="AI Shopper Avatar"
+            <img 
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face" 
+              alt="AI Shopper Avatar" 
               className="avatar-image"
             />
           </div>
           <h1 className="welcome-title">Hello there!</h1>
           <p className="welcome-subtitle">
-            I&apos;m your personal AI shopper. Tell me what&apos;s on your mind today.
+            I'm your personal AI shopper. Tell me what's on your mind today.
           </p>
         </div>
 
+        {/* Category Buttons - Always visible */}
         <div className="category-section">
           <div className="category-buttons">
             {categories.map((category) => (
@@ -338,7 +232,8 @@ function AIShopper() {
           </div>
         </div>
 
-        {messages.map((message) => (
+        {/* Chat Messages */}
+        {messages.map((message, index) => (
           <div key={message.id} className={`message-wrapper ${message.sender}`}>
             {message.sender === 'assistant' && (
               <div className="message-avatar assistant-avatar">
@@ -353,9 +248,15 @@ function AIShopper() {
                 <p>{message.text}</p>
               </div>
             </div>
+            {message.sender === 'user' && (
+              <div className="message-avatar user-avatar">
+                <User size={20} />
+              </div>
+            )}
           </div>
         ))}
 
+        {/* Loading Indicator */}
         {isLoading && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar">
@@ -374,6 +275,7 @@ function AIShopper() {
           </div>
         )}
 
+        {/* Selection Components */}
         {shouldShowSelections && selectionState?.step === 'price' && (
           <div className="selection-container">
             <h4 className="selection-title">SELECT PRICE RANGE</h4>
@@ -412,13 +314,19 @@ function AIShopper() {
           </div>
         )}
 
-        {lastAiMessage?.showProducts && !isLoading && (
-          <ProductRecommendations onCompare={handleCompare} />
+        {showProducts && (
+          <ProductRecommendations 
+            onCompare={(selectedIds) => {
+              console.log('Comparing products:', selectedIds);
+            }}
+            onProductSelect={onProductSelect}
+          />
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input Section */}
       <div className="input-section">
         <form onSubmit={handleSubmit} className="input-form">
           <div className="input-container">
@@ -445,28 +353,14 @@ function AIShopper() {
         </form>
       </div>
 
-      {showComparison && (
-        <ProductComparison
-          selectedIds={selectedProducts}
-          onClose={handleCloseComparison}
-          onRemove={handleRemoveFromComparison}
-          onBuy={handleBuyFromComparison}
-        />
-      )}
-
-      {showPurchase && (
-        <ProductPurchaseScreen
-          onBack={handleClosePurchase}
-          onBuy={handleFinalBuy}
-        />
-      )}
-
+      {/* QR Scanner Modal */}
       <QRScannerModal
         isOpen={isScannerOpen}
         onClose={handleCloseScanner}
         onScanSuccess={handleScanSuccess}
       />
 
+      {/* Voice Input Modal */}
       <VoiceInputModal
         isOpen={isVoiceInputOpen}
         onClose={handleCloseVoiceInput}
