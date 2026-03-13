@@ -1,0 +1,118 @@
+{
+  "bank_offers": [
+    {
+      "offer_id": "bank_offer_001",
+      "bank_name": "Flipkart Axis",
+      "bank_logo": "https://example.com/logos/flipkart-axis.png",
+      "discount_amount": 4750,
+      "currency": "INR",
+      "offer_type": "Credit Card",
+      "includes_cashback": true,
+      "description": "₹4,750 off on Flipkart Axis Credit Card. Includes cashback.",
+      "tag": "Best value for you",
+      "cta_label": "Apply",
+      "is_highlighted": true
+    },
+    {
+      "offer_id": "bank_offer_002",
+      "bank_name": "ICICI",
+      "bank_logo": "https://example.com/logos/icici.png",
+      "discount_amount": 3000,
+      "currency": "INR",
+      "offer_type": "Credit Card",
+      "includes_cashback": false,
+      "description": "₹3,000 off on ICICI Credit Card.",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    },
+    {
+      "offer_id": "bank_offer_003",
+      "bank_name": "Paytm",
+      "bank_logo": "https://example.com/logos/paytm.png",
+      "discount_amount": 3050,
+      "currency": "INR",
+      "offer_type": "UPI",
+      "includes_cashback": true,
+      "description": "₹3,050 off on Paytm UPI. Includes cashback.",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    },
+    {
+      "offer_id": "bank_offer_004",
+      "bank_name": "HDFC",
+      "bank_logo": "https://example.com/logos/hdfc.png",
+      "discount_amount": 3000,
+      "currency": "INR",
+      "offer_type": "Credit, Debit",
+      "includes_cashback": false,
+      "description": "₹3,000 off on HDFC Credit and Debit Card.",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    }
+  ],
+  "emi_offers": [
+    {
+      "emi_offer_id": "emi_001",
+      "bank_name": "HDFC Bank",
+      "bank_logo": "https://example.com/logos/hdfc.png",
+      "monthly_amount": 3778,
+      "tenure_months": 9,
+      "offer_type": "Credit Card",
+      "is_no_cost_emi": true,
+      "extra_off": 4000,
+      "currency": "INR",
+      "description": "No Cost EMI + ₹4,000 off",
+      "tag": "Best value for you",
+      "cta_label": "Apply",
+      "is_highlighted": true
+    },
+    {
+      "emi_offer_id": "emi_002",
+      "bank_name": "ICICI Bank",
+      "bank_logo": "https://example.com/logos/icici.png",
+      "monthly_amount": 3778,
+      "tenure_months": 9,
+      "offer_type": "Credit Card",
+      "is_no_cost_emi": true,
+      "extra_off": 0,
+      "currency": "INR",
+      "description": "No Cost EMI",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    },
+    {
+      "emi_offer_id": "emi_003",
+      "bank_name": "Flipkart Axis Bank",
+      "bank_logo": "https://example.com/logos/flipkart-axis.png",
+      "monthly_amount": 3778,
+      "tenure_months": 9,
+      "offer_type": "Credit Card",
+      "is_no_cost_emi": true,
+      "extra_off": 4000,
+      "currency": "INR",
+      "description": "No Cost EMI + ₹4,000 off",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    },
+    {
+      "emi_offer_id": "emi_004",
+      "bank_name": "Flipkart SBI",
+      "bank_logo": "https://example.com/logos/sbi.png",
+      "monthly_amount": 3778,
+      "tenure_months": 9,
+      "offer_type": "Credit Card",
+      "is_no_cost_emi": true,
+      "extra_off": 0,
+      "currency": "INR",
+      "description": "No Cost EMI",
+      "tag": null,
+      "cta_label": "Apply",
+      "is_highlighted": false
+    }
+  ]
+}
