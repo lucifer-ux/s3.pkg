@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot } from 'lucide-react';
 import QRScannerModal from './QRScannerModal';
 import VoiceInputModal from './VoiceInputModal';
+import VoicePopup from './VoicePopup';
 import ProductRecommendations from './ProductRecommendations';
 import ProductComparison from './ProductComparison';
 import ProductPurchaseScreen from './ProductPurchaseScreen';
 import './AIShopper.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // API client for chat
 const chatApi = {
@@ -72,6 +73,9 @@ function AIShopper() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
   const [isVoiceInputOpen, setIsVoiceInputOpen] = useState(false);
+  const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
+  const [voiceUserMessage, setVoiceUserMessage] = useState('');
+  const [voiceAiResponse, setVoiceAiResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
   const [selectedPrice, setSelectedPrice] = useState(null);
@@ -395,6 +399,112 @@ function AIShopper() {
     handleSendMessage(transcript);
   };
 
+  // Handle voice mode - show popup and send message
+  const handleVoiceMode = async (transcript) => {
+    if (!transcript.trim()) return;
+
+    // Set user message for popup
+    setVoiceUserMessage(transcript);
+
+    // Send message in background (same as regular chat)
+    const userMessage = {
+      id: Date.now(),
+      text: transcript,
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      // Build message history for API
+      const apiMessages = messages
+        .filter(m => m.sender === 'user' || m.sender === 'assistant')
+        .map(m => ({
+          role: m.sender,
+          content: m.text
+        }));
+
+      apiMessages.push({
+        role: 'user',
+        content: transcript
+      });
+
+      // Create a placeholder for the streaming response
+      const aiMessageId = Date.now() + 1;
+      setMessages((prev) => [...prev, {
+        id: aiMessageId,
+        text: '',
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+      }]);
+
+      // Stream the response
+      let fullText = '';
+      let recommendations = null;
+      for await (const chunk of chatApi.streamMessage(apiMessages)) {
+        if (chunk.content) {
+          fullText += chunk.content;
+          setMessages((prev) =>
+            prev.map(m =>
+              m.id === aiMessageId
+                ? { ...m, text: fullText }
+                : m
+            )
+          );
+        }
+        if (chunk.done) {
+          fullText = chunk.content || fullText;
+          recommendations = chunk.recommendations;
+        }
+      }
+
+      // Update final message with recommendations if any
+      if (recommendations && recommendations.length > 0) {
+        setApiRecommendations(recommendations);
+        setMessages((prev) =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, text: fullText, showProducts: true, recommendations }
+              : m
+          )
+        );
+      }
+
+      // Set AI response for voice popup (will trigger TTS)
+      setVoiceAiResponse(fullText);
+    } catch (error) {
+      console.error('Voice chat error:', error);
+      const errorMessage = 'Sorry, I had trouble connecting. Please try again.';
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        text: errorMessage,
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+      }]);
+      setVoiceAiResponse(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAiFinishedSpeaking = () => {
+    // AI finished speaking - user can now tap to speak again
+  };
+
+  const handleTapToSpeak = (transcript) => {
+    // User tapped mic and spoke - send to AI
+    handleVoiceMode(transcript);
+  };
+
+  const handleCloseVoicePopup = () => {
+    setIsVoicePopupOpen(false);
+    setVoiceUserMessage('');
+    setVoiceAiResponse('');
+    setIsAiSpeaking(false);
+  };
+
   const getLastAiMessage = () => {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].sender === 'assistant') {
@@ -563,7 +673,7 @@ function AIShopper() {
                 <Send size={20} />
               </button>
             ) : (
-              <button type="button" className="icon-button mic-button" onClick={handleOpenVoiceInput}>
+              <button type="button" className="icon-button mic-button" onClick={() => setIsVoicePopupOpen(true)}>
                 <Mic size={20} />
               </button>
             )}
@@ -597,6 +707,15 @@ function AIShopper() {
         isOpen={isVoiceInputOpen}
         onClose={handleCloseVoiceInput}
         onTranscriptComplete={handleVoiceTranscriptComplete}
+      />
+
+      <VoicePopup
+        isOpen={isVoicePopupOpen}
+        onClose={handleCloseVoicePopup}
+        userMessage={voiceUserMessage}
+        aiResponse={voiceAiResponse}
+        onAiFinishedSpeaking={handleAiFinishedSpeaking}
+        onTapToSpeak={handleTapToSpeak}
       />
     </div>
   );

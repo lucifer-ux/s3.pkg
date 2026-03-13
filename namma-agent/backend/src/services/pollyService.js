@@ -1,21 +1,32 @@
 import { PollyClient, SynthesizeSpeechCommand, DescribeVoicesCommand } from '@aws-sdk/client-polly';
-import { getSignedUrl } from '@aws-sdk/polly-request-presigner';
+import pollyPresigner from '@aws-sdk/polly-request-presigner';
+const { getSignedUrl } = pollyPresigner;
 
 class PollyService {
   constructor() {
-    this.client = new PollyClient({
-      region: process.env.AWS_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-
-    // Default voice settings optimized for Indian English
-    this.defaultVoice = process.env.POLLY_VOICE || 'Kajal';
-    this.defaultEngine = process.env.POLLY_ENGINE || 'neural';
-    this.defaultLanguage = process.env.POLLY_LANGUAGE || 'en-IN';
+    // Lazy initialization - client created on first use
+    this._client = null;
   }
+
+  getClient() {
+    if (!this._client) {
+      console.log('Initializing Polly client with region:', process.env.AWS_REGION || 'us-east-1');
+      console.log('AWS credentials available:', !!process.env.AWS_ACCESS_KEY_ID, !!process.env.AWS_SECRET_ACCESS_KEY);
+
+      this._client = new PollyClient({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      });
+    }
+    return this._client;
+  }
+
+  get defaultVoice() { return process.env.POLLY_VOICE || 'Kajal'; }
+  get defaultEngine() { return process.env.POLLY_ENGINE || 'neural'; }
+  get defaultLanguage() { return process.env.POLLY_LANGUAGE || 'en-IN'; }
 
   /**
    * Synthesize text to speech using AWS Polly
@@ -50,7 +61,7 @@ class PollyService {
       console.log(`Synthesizing speech with voice: ${voiceId}, engine: ${engine}`);
 
       const command = new SynthesizeSpeechCommand(params);
-      const response = await this.client.send(command);
+      const response = await this.getClient().send(command);
 
       // Convert stream to buffer
       const chunks = [];
@@ -83,7 +94,7 @@ class PollyService {
       }
 
       const command = new DescribeVoicesCommand(params);
-      const response = await this.client.send(command);
+      const response = await this.getClient().send(command);
 
       return response.Voices.map(voice => ({
         id: voice.Id,

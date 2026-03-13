@@ -5,11 +5,14 @@ import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import pollyRoutes from './routes/polly.js';
+import transcribeRoutes from './routes/transcribe.js';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Import routes after dotenv config
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -248,6 +251,10 @@ app.use(cors({
 
 app.use(express.json());
 
+// Routes
+app.use('/api/polly', pollyRoutes);
+app.use('/api/transcribe', transcribeRoutes);
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', products: products.length });
@@ -372,6 +379,175 @@ app.get('/api/products', (req, res) => {
   const { category, limit = 10 } = req.query;
   const prods = getProductsByCategory(category, parseInt(limit));
   res.json({ products: prods.map(formatProductForDisplay) });
+// Clean response by removing thinking tokens and system content
+});
+
+function cleanResponse(text) {
+  if (!text) return text;
+
+  // Remove common thinking/reasoning patterns
+  let cleaned = text
+    // Remove content between <thinking> tags
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    // Remove content between <reasoning> tags
+    .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
+    // Remove content between <thought> tags
+    .replace(/<thought>[\s\S]*?<\/thought>/gi, '')
+    // Remove "Thinking:" or "Reasoning:" sections
+    .replace(/^(Thinking|Reasoning|Thought):[\s\S]*?(?=(\n\n|Answer:|Response:|$))/i, '')
+    // Remove "Answer:" or "Response:" prefixes
+    .replace(/^(Answer|Response):\s*/i, '')
+    // Trim whitespace
+    .trim();
+
+  return cleaned;
+}
+
+// Aggressive cleanup for summaries - removes explanation patterns
+function cleanSummary(text) {
+  if (!text) return text;
+
+  let cleaned = text;
+
+  // Remove everything after instruction keywords (model repeating system prompt)
+  const cutOffPatterns = [
+    /\n\s*-\s*Reply with ONLY/i,
+    /\n\s*-\s*No thinking/i,
+    /\n\s*-\s*Never explain/i,
+    /\n\s*Reply with ONLY/i,
+    /\n\s*No thinking/i,
+    /\n\s*Never explain/i,
+    /Reply with ONLY the summary/i,
+    /No thinking, no explanations/i,
+    /Your ONLY output is/i,
+  ];
+
+  for (const pattern of cutOffPatterns) {
+    const match = cleaned.match(pattern);
+    if (match) {
+      cleaned = cleaned.substring(0, match.index).trim();
+    }
+  }
+
+  // Remove lines that look like explanations of what the model is doing
+  const explanationPatterns = [
+    /^The user wants/i,
+    /^I need to/i,
+    /^I should/i,
+    /^I'll/i,
+    /^Let me/i,
+    /^First,?/i,
+    /^Okay,?/i,
+    /^So,?/i,
+    /^Here('s| is)/i,
+    /^To summarize/i,
+    /^Key points/i,
+    /^Drafting/i,
+    /^Option \d/i,
+    /^-\s+(Be|Keep|Focus|Do|Speak|Reply|No|Never)/i,
+    /^\d+\./,
+  ];
+
+  // Split into lines and filter out explanation lines
+  const lines = cleaned.split('\n');
+  const goodLines = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    let isBad = false;
+    for (const pattern of explanationPatterns) {
+      if (pattern.test(trimmed)) {
+        isBad = true;
+        break;
+      }
+    }
+    if (!isBad) {
+      goodLines.push(trimmed);
+    }
+  }
+
+  cleaned = goodLines.join(' ').trim();
+
+  // If we filtered too much, return original with basic cleanup
+  if (cleaned.length < 20 && text.length > 50) {
+    // Take first sentence only
+    const firstSentence = text.split(/[.!?]\s+/)[0];
+    return firstSentence ? firstSentence + '.' : text.replace(/\n/g, ' ').trim();
+  }
+
+  return cleaned;
+}
+
+// Summarize text for voice endpoint
+app.post('/api/summarize-for-voice', async (req, res) => {
+  try {
+    const { text, model = DEFAULT_MODEL } = req.body;
+
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    // First clean the response
+    const cleanedText = cleanResponse(text);
+
+    // Only summarize if text is long enough
+    if (cleanedText.length < 150) {
+      console.log('Text is short enough, skipping summarization');
+      return res.json({
+        original: text,
+        cleaned: cleanedText,
+        summary: cleanedText,
+        characters: cleanedText.length,
+      });
+    }
+
+    // Simple extraction: take first 2 sentences from the greeting/question
+    // Remove markdown and normalize whitespace
+    let simplified = cleanedText
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Split into sentences and take first 2 meaningful ones
+    const sentences = simplified
+      .split(/(?<=[.!?])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 15 && !s.match(/^\d+\./));
+
+    let summary;
+    if (sentences.length >= 2) {
+      summary = sentences.slice(0, 2).join(' ');
+    } else if (sentences.length === 1) {
+      summary = sentences[0];
+    } else {
+      summary = simplified.substring(0, 200);
+    }
+
+    // Ensure summary doesn't end mid-sentence
+    if (summary.length > 250) {
+      const lastPeriod = summary.lastIndexOf('.', 250);
+      if (lastPeriod > 100) {
+        summary = summary.substring(0, lastPeriod + 1);
+      }
+    }
+
+    console.log('Original text length:', text.length);
+    console.log('Summary:', summary);
+
+    res.json({
+      original: text,
+      cleaned: cleanedText,
+      summary,
+      characters: summary.length,
+    });
+  } catch (error) {
+    console.error('Summarize error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.listen(PORT, () => {
