@@ -7,7 +7,7 @@ import ProductComparison from './ProductComparison';
 import ProductPurchaseScreen from './ProductPurchaseScreen';
 import './AIShopper.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
 
 // API client for chat
 const chatApi = {
@@ -30,6 +30,8 @@ const chatApi = {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let recommendations = null;
+    let fullContent = '';
 
     while (true) {
       const { done, value } = await reader.read();
@@ -41,10 +43,21 @@ const chatApi = {
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
-          if (data === '[DONE]') return;
+          if (data === '[DONE]') {
+            // Yield final result with recommendations
+            yield { done: true, content: fullContent, recommendations };
+            return;
+          }
           try {
             const parsed = JSON.parse(data);
-            if (parsed.content) yield parsed.content;
+            if (parsed.content) {
+              fullContent += parsed.content;
+              yield { content: parsed.content };
+            }
+            if (parsed.done) {
+              recommendations = parsed.recommendations;
+              fullContent = parsed.fullContent || fullContent;
+            }
           } catch (e) {
             // ignore parse errors
           }
@@ -59,15 +72,6 @@ function AIShopper() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
   const [isVoiceInputOpen, setIsVoiceInputOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      text: "What are you looking to buy today?",
-      sender: 'assistant',
-      timestamp: new Date().toISOString(),
-      isWelcome: true,
-    }
-  ]);
   const [isLoading, setIsLoading] = useState(false);
   const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
   const [selectedPrice, setSelectedPrice] = useState(null);
@@ -78,11 +82,56 @@ function AIShopper() {
   const [showComparison, setShowComparison] = useState(false);
   const [showPurchase, setShowPurchase] = useState(false);
 
+  // Load apiRecommendations from localStorage on mount
+  const [apiRecommendations, setApiRecommendations] = useState(() => {
+    const saved = localStorage.getItem('apiRecommendations');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved recommendations:', e);
+      }
+    }
+    return [];
+  });
+
+  // Load messages from localStorage on mount
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chatMessages');
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages);
+      } catch (e) {
+        console.error('Failed to parse saved messages:', e);
+      }
+    }
+    // Default welcome message if no saved messages
+    return [
+      {
+        id: 'welcome',
+        text: "What are you looking to buy today?",
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+        isWelcome: true,
+      }
+    ];
+  });
+
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
+
+  // Save apiRecommendations to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('apiRecommendations', JSON.stringify(apiRecommendations));
+  }, [apiRecommendations]);
 
   useEffect(() => {
     scrollToBottom();
@@ -129,9 +178,9 @@ function AIShopper() {
     setIsLoading(true);
 
     try {
-      // Build message history for API (only user/assistant roles)
+      // Build message history for API (only user/assistant roles, excluding welcome message)
       const apiMessages = messages
-        .filter(m => m.sender === 'user' || m.sender === 'assistant')
+        .filter(m => (m.sender === 'user' || m.sender === 'assistant') && !m.isWelcome)
         .map(m => ({
           role: m.sender,
           content: m.text
@@ -142,6 +191,14 @@ function AIShopper() {
         role: 'user',
         content: messageText
       });
+
+      // Add instruction to ask one question at a time if this is the first message
+      if (apiMessages.length <= 1) {
+        apiMessages.unshift({
+          role: 'system',
+          content: 'This is the start of the conversation. Ask only ONE question: What category are you looking for (phones, laptops, etc.)? Do NOT ask multiple questions.'
+        });
+      }
 
       // Create a placeholder for the streaming response
       const aiMessageId = Date.now() + 1;
@@ -154,12 +211,31 @@ function AIShopper() {
 
       // Stream the response
       let fullText = '';
+      let recommendations = null;
       for await (const chunk of chatApi.streamMessage(apiMessages)) {
-        fullText += chunk;
+        if (chunk.content) {
+          fullText += chunk.content;
+          setMessages((prev) =>
+            prev.map(m =>
+              m.id === aiMessageId
+                ? { ...m, text: fullText }
+                : m
+            )
+          );
+        }
+        if (chunk.done) {
+          recommendations = chunk.recommendations;
+          fullText = chunk.content || fullText;
+        }
+      }
+
+      // Update final message with recommendations if any
+      if (recommendations && recommendations.length > 0) {
+        setApiRecommendations(recommendations);
         setMessages((prev) =>
           prev.map(m =>
             m.id === aiMessageId
-              ? { ...m, text: fullText }
+              ? { ...m, text: fullText, showProducts: true, recommendations }
               : m
           )
         );
@@ -356,7 +432,7 @@ function AIShopper() {
           </p>
         </div>
 
-        <div className="category-section">
+        {/* <div className="category-section">
           <div className="category-buttons">
             {categories.map((category) => (
               <button
@@ -368,7 +444,7 @@ function AIShopper() {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {messages.map((message) => (
           <div key={message.id} className={`message-wrapper ${message.sender}`}>
@@ -462,9 +538,8 @@ function AIShopper() {
           </div>
         )}
 
-        {/* Product Recommendations */}
-        {conversationStep === 'showing_products' && !isLoading && (
-          <ProductRecommendations onCompare={handleCompare} />
+        {lastAiMessage?.showProducts && !isLoading && (
+          <ProductRecommendations onCompare={handleCompare} recommendations={apiRecommendations} />
         )}
 
         <div ref={messagesEndRef} />

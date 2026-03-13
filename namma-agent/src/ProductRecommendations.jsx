@@ -4,12 +4,26 @@ import ProductDetailModal from './ProductDetailModal';
 import './ProductRecommendations.css';
 import productsData from '../products.json';
 
-function ProductRecommendations({ onCompare }) {
+function ProductRecommendations({ onCompare, recommendations }) {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [detailProductId, setDetailProductId] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const products = useMemo(() => {
+    // Use API recommendations if provided, otherwise fall back to default smartphones
+    if (recommendations && recommendations.length > 0) {
+      return recommendations.map((product) => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        tagline: product.highlights?.[0] || product.description?.substring(0, 60) + '...',
+        image: product.image,
+        brand: product.brand,
+        rating: product.rating,
+      }));
+    }
+
+    // Fallback to static data
     const smartphones = productsData
       .filter(product => product.category === 'Smartphones')
       .slice(0, 4);
@@ -23,7 +37,7 @@ function ProductRecommendations({ onCompare }) {
       tagline: product.highlights?.[0] || product.description?.substring(0, 60) + '...',
       image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=400&h=400&fit=crop',
     }));
-  }, []);
+  }, [recommendations]);
 
   const toggleSelection = (productId) => {
     setSelectedProducts((prev) => {

@@ -1,4 +1,10 @@
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class ChatService {
   constructor() {
@@ -12,32 +18,523 @@ class ChatService {
     this.maxTokens = parseInt(process.env.LITELLM_MAX_TOKENS, 10) || 2000;
     this.temperature = parseFloat(process.env.LITELLM_TEMPERATURE) || 0.7;
 
-    // System prompt for the shopping assistant
-    this.systemPrompt = `You are Namma, an AI shopping assistant for an Indian e-commerce platform. Your role is to help users find the best products based on their needs, budget, and preferences.
+    // Load product catalog and specification data
+    this.products = this.loadProducts();
+    this.specifications = this.loadSpecifications();
+
+    // Build system prompt with actual product data
+    this.systemPrompt = this.buildSystemPrompt();
+  }
+
+  /**
+   * Load products from products.json
+   */
+  loadProducts() {
+    try {
+      // Try multiple possible paths for products.json
+      const possiblePaths = [
+        path.join(process.cwd(), '..', '..', 'products.json'),
+        path.join(process.cwd(), '..', 'products.json'),
+        path.join(process.cwd(), 'products.json'),
+        path.join(__dirname, '..', '..', '..', '..', 'products.json'),
+      ];
+
+      for (const jsonPath of possiblePaths) {
+        if (fs.existsSync(jsonPath)) {
+          const data = fs.readFileSync(jsonPath, 'utf8');
+          return JSON.parse(data);
+        }
+      }
+
+      console.warn('products.json not found, using empty product catalog');
+      return [];
+    } catch (error) {
+      console.error('Error loading products.json:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Load specifications from llmfeed.json
+   */
+  loadSpecifications() {
+    try {
+      // Try multiple possible paths for llmfeed.json
+      const possiblePaths = [
+        path.join(process.cwd(), '..', '..', 'llmfeed.json'),
+        path.join(process.cwd(), '..', 'llmfeed.json'),
+        path.join(process.cwd(), 'llmfeed.json'),
+        path.join(__dirname, '..', '..', '..', '..', 'llmfeed.json'),
+      ];
+
+      for (const jsonPath of possiblePaths) {
+        if (fs.existsSync(jsonPath)) {
+          const data = fs.readFileSync(jsonPath, 'utf8');
+          return JSON.parse(data);
+        }
+      }
+
+      console.warn('llmfeed.json not found, using empty specifications');
+      return {};
+    } catch (error) {
+      console.error('Error loading llmfeed.json:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Get available categories from products
+   */
+  getAvailableCategories() {
+    const categories = new Set();
+    for (const product of this.products) {
+      if (product.category) {
+        categories.add(product.category);
+      }
+    }
+    return Array.from(categories);
+  }
+
+  /**
+   * Get available brands from products
+   */
+  getAvailableBrands() {
+    const brands = new Set();
+    for (const product of this.products) {
+      if (product.brand) {
+        brands.add(product.brand);
+      }
+    }
+    return Array.from(brands);
+  }
+
+  /**
+   * Search products by name, brand, or category
+   */
+  searchProducts(query, limit = 10) {
+    if (!query || this.products.length === 0) {
+      return [];
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results = [];
+
+    for (const product of this.products) {
+      const matchScore = this.calculateMatchScore(product, lowerQuery);
+      if (matchScore > 0) {
+        results.push({ product, score: matchScore });
+      }
+    }
+
+    // Sort by match score (descending) and return top results
+    results.sort((a, b) => b.score - a.score);
+    return results.slice(0, limit).map(r => r.product);
+  }
+
+  /**
+   * Calculate match score for a product against a query
+   */
+  calculateMatchScore(product, query) {
+    let score = 0;
+
+    if (product.name?.toLowerCase().includes(query)) {
+      score += 10;
+      // Exact match gets higher score
+      if (product.name.toLowerCase() === query) {
+        score += 5;
+      }
+    }
+
+    if (product.brand?.toLowerCase().includes(query)) {
+      score += 8;
+    }
+
+    if (product.category?.toLowerCase().includes(query)) {
+      score += 6;
+    }
+
+    if (product.description?.toLowerCase().includes(query)) {
+      score += 3;
+    }
+
+    if (product.highlights) {
+      for (const highlight of product.highlights) {
+        if (highlight.toLowerCase().includes(query)) {
+          score += 2;
+          break;
+        }
+      }
+    }
+
+    return score;
+  }
+
+  /**
+   * Get product by name or ID
+   */
+  getProduct(identifier) {
+    if (!identifier || this.products.length === 0) {
+      return null;
+    }
+
+    const lowerId = identifier.toLowerCase();
+
+    for (const product of this.products) {
+      if (
+        product.product_id?.toLowerCase() === lowerId ||
+        product.name?.toLowerCase() === lowerId ||
+        product.slug?.toLowerCase() === lowerId
+      ) {
+        return product;
+      }
+    }
+
+    // Try partial match if exact match not found
+    for (const product of this.products) {
+      if (
+        product.name?.toLowerCase().includes(lowerId) ||
+        product.product_id?.toLowerCase().includes(lowerId)
+      ) {
+        return product;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get products by category
+   */
+  getProductsByCategory(category, limit = 20) {
+    if (!category || this.products.length === 0) {
+      return [];
+    }
+
+    const lowerCategory = category.toLowerCase();
+    const results = [];
+
+    for (const product of this.products) {
+      if (product.category?.toLowerCase() === lowerCategory) {
+        results.push(product);
+        if (results.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get specification description and example for a category and spec type
+   */
+  getSpecDescription(category, specType, specValue) {
+    if (!this.specifications[category]) {
+      return null;
+    }
+
+    const categorySpecs = this.specifications[category];
+
+    if (!categorySpecs[specType]) {
+      return null;
+    }
+
+    // Find matching spec value
+    for (const spec of categorySpecs[specType]) {
+      const key = Object.keys(spec)[0];
+      if (key.toLowerCase() === specValue?.toLowerCase() ||
+          key.toLowerCase().replace(/[_\s]/g, '') === specValue?.toLowerCase().replace(/[_\s]/g, '')) {
+        return spec[key];
+      }
+    }
+
+    // Return first matching spec if exact match not found
+    if (categorySpecs[specType].length > 0) {
+      const firstSpec = categorySpecs[specType][0];
+      const key = Object.keys(firstSpec)[0];
+      return firstSpec[key];
+    }
+
+    return null;
+  }
+
+  /**
+   * Get all specifications for a category
+   */
+  getCategorySpecs(category) {
+    return this.specifications[category] || null;
+  }
+
+  /**
+   * Format product for display in conversation
+   */
+  formatProductForDisplay(product) {
+    if (!product) return '';
+
+    const priceInfo = product.skus?.[0]?.price;
+    const price = priceInfo
+      ? `₹${priceInfo.selling_price?.toLocaleString('en-IN') || priceInfo.mrp?.toLocaleString('en-IN')}`
+      : 'Price not available';
+
+    return {
+      id: product.product_id,
+      name: product.name,
+      brand: product.brand,
+      category: product.category,
+      price: price,
+      rating: product.ratings?.average_rating,
+      highlights: product.highlights || [],
+      description: product.description,
+    };
+  }
+
+  /**
+   * Build the system prompt with actual product catalog and specifications
+   */
+  buildSystemPrompt() {
+    const categories = this.getAvailableCategories();
+    const brands = this.getAvailableBrands();
+
+    let productCatalog = '';
+    if (categories.length > 0) {
+      productCatalog = `
+
+AVAILABLE PRODUCT CATEGORIES:
+${categories.map(cat => `- ${cat}`).join('\n')}
+
+AVAILABLE BRANDS:
+${brands.slice(0, 20).join(', ')}${brands.length > 20 ? ' and more...' : ''}
+
+PRODUCT CATALOG HIGHLIGHTS:
+We have ${this.products.length} products in our catalog. Here are some popular ones:
+${this.products.slice(0, 10).map(p => `- ${p.name} (${p.brand}) - ${p.category}`).join('\n')}`;
+    }
+
+    let specGuide = '';
+    if (Object.keys(this.specifications).length > 0) {
+      specGuide = `
+
+SPECIFICATION GUIDE (use these descriptions and examples when explaining specs to users):
+
+${Object.entries(this.specifications).map(([category, specs]) => {
+  return `${category}:\n${Object.entries(specs).map(([specType, specValues]) => {
+    const specInfo = specValues[0];
+    const key = Object.keys(specInfo)[0];
+    return `  ${specType}: ${specInfo[key].description}\n  Example: ${specInfo[key].example}`;
+  }).join('\n\n')}`;
+}).join('\n\n')}`;
+    }
+
+    return `You are Namma, an AI shopping assistant for an Indian e-commerce platform. Your role is to help users find the best products based on their needs, budget, and preferences.
+
+IMPORTANT: Always refer to the conversation history to maintain context. If a user mentions something they told you earlier (like their budget, preferred brand, or use case), remember it and use it in your responses. Ask clarifying questions only when you genuinely need more information.
 
 Guidelines:
 - Be friendly, helpful, and conversational
-- Ask clarifying questions to understand user needs
+- Maintain context from the entire conversation history
 - Consider Indian market context (prices in INR, availability, popular brands)
-- Provide specific product recommendations with reasons
-- Compare products when users are deciding between options
+- Provide specific product recommendations from our catalog with reasons
+- Compare products using the SPECIFICATION GUIDE below to explain features in relatable terms
 - Respect user budget constraints
 - Be knowledgeable about mobile phones, laptops, accessories, and electronics
 - Use Indian English conventions and be culturally aware
 - Keep responses concise but informative
+- When comparing products, use real-world examples from the specification guide to help users understand
 - If you don't know something, be honest and suggest how the user can find out
+- When recommending products, refer to actual products from our catalog${productCatalog}
 
-Current product categories available:
-- Mobile phones (iPhone, Samsung, Xiaomi, OnePlus, Google Pixel, etc.)
-- Laptops (Dell, HP, Lenovo, MacBook, ASUS, etc.)
-- Accessories (headphones, chargers, cases, etc.)
+When explaining specifications, ALWAYS use the descriptions and examples from the SPECIFICATION GUIDE to make technical terms easy to understand. For example:
+- Instead of just saying "8GB RAM", explain: "8GB RAM means when switching between YouTube, WhatsApp, and Chrome, most apps stay open and switch smoothly."
+- Instead of just saying "5000mAh battery", explain: "A 5000mAh battery usually lasts a full day when using the phone for calls, videos, and social media."
+${specGuide}
 
 When making recommendations, consider:
-1. Budget constraints
+1. Budget constraints (mentioned in conversation history)
 2. Priority features (camera, battery, gaming, 5G, etc.)
 3. Brand preferences
 4. Use case (work, gaming, photography, daily use)
-5. Value for money in the Indian market`;
+5. Value for money in the Indian market
+
+CRITICAL RULE - Ask ONLY ONE QUESTION AT A TIME:
+Your response MUST contain at most ONE question mark (?) per message until you give recommendations.
+- If you don't know the category yet: Ask ONLY "What category are you looking for?" - NOTHING ELSE.
+- If category is known but budget is unknown: Ask ONLY "What's your budget range?" - NOTHING ELSE.
+- If category and budget are known but priorities are unknown: Ask ONLY "What's most important to you?" - NOTHING ELSE.
+- ONLY after knowing category + budget + priorities: Provide recommendations.
+
+STRICTLY FORBIDDEN (doing any of these is a FAILURE):
+- NEVER ask multiple questions in one response
+- NEVER use bullet points (• or -) or numbered lists when asking questions
+- NEVER provide a checklist of things to answer
+- NEVER say "tell me your: 1) budget, 2) brand, 3) features"
+- NEVER include more than one question mark in a message before giving recommendations
+- NEVER use bold formatting (**) when asking questions
+- NEVER ask "few quick questions" followed by a list
+
+CORRECT EXAMPLES (follow these exactly):
+- User: "Hi" → You: "Hi! What category are you looking for?"
+- User: "Mobile phones" → You: "Great! What's your budget range?"
+- User: "Around 20000" → You: "Thanks! What's most important to you in a phone?"
+- User: "Camera" → You: "Got it! Here are my recommendations..."
+
+INCORRECT EXAMPLES (NEVER do these):
+- "To help you, a few quick questions: - **Budget** - What's your... - **Brand** - Any..."
+- "Could you tell me: 1. budget 2. brand 3. features?"
+- "What's your budget? Any preferred brand? What features matter?"
+- "Please share: budget, brand, and priorities"
+
+REMEMBER: If your response has more than one question mark (?), YOU HAVE FAILED. Keep it to exactly ONE question until ready to recommend.
+
+Response format for recommendations:
+1. Acknowledge user's requirements from conversation context
+2. Recommend 3-4 specific products from our catalog with prices
+3. Explain why each product fits their needs using relatable examples
+4. Provide a clear recommendation based on their priorities`;
+  }
+
+  /**
+   * Extract relevant context from conversation history for product search
+   */
+  extractProductContext(messages) {
+    const context = {
+      category: null,
+      brand: null,
+      budgetMin: null,
+      budgetMax: null,
+      features: [],
+      useCase: null,
+    };
+
+    // Combine all user messages to search for keywords
+    const userText = messages
+      .filter(m => m.role === 'user')
+      .map(m => m.content)
+      .join(' ')
+      .toLowerCase();
+
+    // Detect category
+    const categoryKeywords = {
+      'smartphones': ['phone', 'mobile', 'smartphone', 'cellphone', 'iphone', 'samsung', 'xiaomi', 'oneplus'],
+      'laptops': ['laptop', 'notebook', 'macbook', 'computer'],
+      'televisions': ['tv', 'television', 'led tv', 'oled tv', 'smart tv'],
+      'refrigerators': ['fridge', 'refrigerator', 'freezer'],
+      'washingmachines': ['washing machine', 'washer', 'dryer'],
+      'airconditioners': ['ac', 'air conditioner', 'cooler'],
+      'accessories': ['headphone', 'earphone', 'charger', 'case', 'cable', 'accessory'],
+    };
+
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some(kw => userText.includes(kw))) {
+        context.category = category;
+        break;
+      }
+    }
+
+    // Detect budget
+    const budgetPattern = /(?:rs\.?|₹|inr|budget|price|under|below|around)\s*[:\s]*([\d,]+(?:\s*(?:k|thousand| lakh)?)?)/gi;
+    let match;
+    while ((match = budgetPattern.exec(userText)) !== null) {
+      const amount = this.parseBudget(match[1]);
+      if (amount) {
+        if (!context.budgetMin) {
+          context.budgetMin = amount;
+        } else if (!context.budgetMax) {
+          context.budgetMax = amount;
+        }
+      }
+    }
+
+    // Detect brand
+    const brands = this.getAvailableBrands();
+    for (const brand of brands) {
+      if (userText.includes(brand.toLowerCase())) {
+        context.brand = brand;
+        break;
+      }
+    }
+
+    // Detect features/use case
+    const featureKeywords = [
+      'camera', 'battery', 'gaming', '5g', 'display', 'performance',
+      'storage', 'ram', 'processor', 'screen', 'fast charging'
+    ];
+    for (const feature of featureKeywords) {
+      if (userText.includes(feature)) {
+        context.features.push(feature);
+      }
+    }
+
+    return context;
+  }
+
+  /**
+   * Parse budget string to number
+   */
+  parseBudget(budgetStr) {
+    if (!budgetStr) return null;
+
+    const cleanStr = budgetStr.replace(/,/g, '').toLowerCase().trim();
+
+    if (cleanStr.includes('lakh')) {
+      const num = parseFloat(cleanStr.replace(/[^\d.]/g, ''));
+      return num * 100000;
+    }
+
+    if (cleanStr.includes('k') || cleanStr.includes('thousand')) {
+      const num = parseFloat(cleanStr.replace(/[^\d.]/g, ''));
+      return num * 1000;
+    }
+
+    return parseInt(cleanStr.replace(/[^\d]/g, ''), 10) || null;
+  }
+
+  /**
+   * Build contextual information based on conversation history
+   */
+  buildContextualInfo(messages) {
+    const context = this.extractProductContext(messages);
+    let contextInfo = '';
+
+    // Add relevant products based on detected category/brand
+    if (context.category || context.brand) {
+      let relevantProducts = [];
+
+      if (context.brand) {
+        relevantProducts = this.products.filter(p =>
+          p.brand?.toLowerCase() === context.brand.toLowerCase()
+        );
+      }
+
+      if (relevantProducts.length === 0 && context.category) {
+        relevantProducts = this.getProductsByCategory(context.category, 5);
+      }
+
+      if (relevantProducts.length > 0) {
+        contextInfo += `\n\nRELEVANT PRODUCTS FROM CATALOG:\n`;
+        relevantProducts.forEach(p => {
+          const priceInfo = p.skus?.[0]?.price;
+          const price = priceInfo
+            ? `₹${priceInfo.selling_price?.toLocaleString('en-IN') || priceInfo.mrp?.toLocaleString('en-IN')}`
+            : 'Price N/A';
+          contextInfo += `- ${p.name} (${p.brand}): ${price}\n`;
+          contextInfo += `  Highlights: ${p.highlights?.slice(0, 3).join(', ') || 'N/A'}\n`;
+        });
+      }
+    }
+
+    // Add spec guide for detected category
+    if (context.category && this.specifications[context.category]) {
+      contextInfo += `\n\nSPECIFICATION GUIDE FOR ${context.category.toUpperCase()}:\n`;
+      const specs = this.specifications[context.category];
+
+      for (const [specType, specValues] of Object.entries(specs)) {
+        const firstSpec = specValues[0];
+        const key = Object.keys(firstSpec)[0];
+        contextInfo += `${specType}: ${firstSpec[key].description}\n`;
+      }
+    }
+
+    return contextInfo;
   }
 
   /**
@@ -57,9 +554,15 @@ When making recommendations, consider:
         toolChoice = null,
       } = options;
 
+      // Build contextual information based on conversation history
+      const contextualInfo = this.buildContextualInfo(messages);
+
+      // Create enhanced system prompt with context
+      const enhancedSystemPrompt = this.systemPrompt + contextualInfo;
+
       // Ensure system prompt is included
       const fullMessages = [
-        { role: 'system', content: this.systemPrompt },
+        { role: 'system', content: enhancedSystemPrompt },
         ...messages,
       ];
 
@@ -87,8 +590,13 @@ When making recommendations, consider:
         return response; // Returns async iterator for streaming
       }
 
+      let message = response.choices[0].message;
+
+      // Enforce one question at a time
+      message = this.enforceOneQuestion(message);
+
       return {
-        message: response.choices[0].message,
+        message,
         usage: response.usage,
         model: response.model,
         finishReason: response.choices[0].finish_reason,
@@ -97,6 +605,54 @@ When making recommendations, consider:
       console.error('Chat service error:', error);
       throw new Error(`Failed to get chat completion: ${error.message}`);
     }
+  }
+
+  /**
+   * Enforce "one question at a time" rule on AI response
+   * @param {Object} message - The message object from OpenAI
+   * @returns {Object} - Modified message with only one question
+   */
+  enforceOneQuestion(message) {
+    if (!message.content) return message;
+
+    const content = message.content;
+
+    // Detect if this is a question-asking response (not a recommendation or comparison)
+    const isAskingResponse = /\?|what|which|how much|would you|could you|please tell/i.test(content) &&
+      !content.includes('Here are') &&
+      !content.includes('I recommend') &&
+      !content.includes('Best') &&
+      content.length < 500;
+
+    if (!isAskingResponse) return message;
+
+    // Count question marks
+    const questionMarks = content.match(/\?/g);
+    if (!questionMarks || questionMarks.length <= 1) return message;
+
+    // Find first question mark and truncate there
+    const firstQuestionIdx = content.indexOf('?');
+    if (firstQuestionIdx === -1) return message;
+
+    // Look for the start of the sentence containing the question
+    let sentenceStart = content.lastIndexOf('.', firstQuestionIdx);
+    if (sentenceStart === -1) sentenceStart = content.lastIndexOf('\n', firstQuestionIdx);
+    if (sentenceStart === -1) sentenceStart = -1;
+
+    // Extract just the first question with its context (previous sentence if exists)
+    let truncated = content.substring(0, firstQuestionIdx + 1).trim();
+
+    // Remove incomplete sentences at the end
+    truncated = truncated.replace(/[^.?!\n]+$/g, '');
+
+    if (truncated.length > 10) {
+      return {
+        ...message,
+        content: truncated,
+      };
+    }
+
+    return message;
   }
 
   /**
@@ -147,13 +703,19 @@ When making recommendations, consider:
         }
       }
 
+      // Enforce one question at a time on the final content
+      const mockMessage = { content: fullContent };
+      const enforcedMessage = this.enforceOneQuestion(mockMessage);
+
       onDone?.({
-        content: fullContent,
+        content: enforcedMessage.content,
         toolCalls: toolCalls.length > 0 ? toolCalls : null,
       });
-    } catch (error) {
-      console.error('Stream chat error:', error);
-      onError?.(error);
+    } catch (err) {
+      console.error('Stream chat error:', err);
+      if (callbacks.onError) {
+        callbacks.onError(err);
+      }
     }
   }
 
@@ -170,16 +732,69 @@ When making recommendations, consider:
       useCase,
     } = preferences;
 
+    // Find relevant products from catalog
+    let relevantProducts = this.getProductsByCategory(category, 10);
+
+    // Filter by budget if provided
+    if (budget?.min || budget?.max) {
+      relevantProducts = relevantProducts.filter(p => {
+        const price = p.skus?.[0]?.price?.selling_price || p.skus?.[0]?.price?.mrp;
+        if (!price) return true;
+        if (budget.min && price < budget.min) return false;
+        if (budget.max && price > budget.max) return false;
+        return true;
+      });
+    }
+
+    // Filter by brand if provided
+    if (brandPreference) {
+      const brandMatches = relevantProducts.filter(p =>
+        p.brand?.toLowerCase() === brandPreference.toLowerCase()
+      );
+      if (brandMatches.length > 0) {
+        relevantProducts = brandMatches;
+      }
+    }
+
+    // Build product list for prompt
+    const productList = relevantProducts.slice(0, 5).map(p => {
+      const priceInfo = p.skus?.[0]?.price;
+      const price = priceInfo
+        ? `₹${priceInfo.selling_price?.toLocaleString('en-IN') || priceInfo.mrp?.toLocaleString('en-IN')}`
+        : 'Price N/A';
+      return `- ${p.name} (${p.brand}): ${price}
+  Highlights: ${p.highlights?.join(', ') || 'N/A'}
+  Rating: ${p.ratings?.average_rating || 'N/A'}/5 (${p.ratings?.total_reviews || 0} reviews)`;
+    }).join('\n\n');
+
+    // Get spec guide for category
+    let specGuide = '';
+    if (this.specifications[category]) {
+      specGuide = `\n\nUse these specifications to explain features:\n`;
+      const specs = this.specifications[category];
+      for (const [specType, specValues] of Object.entries(specs)) {
+        const firstSpec = specValues[0];
+        const key = Object.keys(firstSpec)[0];
+        specGuide += `- ${specType}: ${firstSpec[key].description}\n`;
+      }
+    }
+
     const messages = [
       {
         role: 'user',
         content: `I need recommendations for ${category}.
-Budget: ₹${budget.min} - ${budget.max ? '₹' + budget.max : 'no upper limit'}
+Budget: ₹${budget?.min || 'no minimum'} - ${budget?.max ? '₹' + budget.max : 'no upper limit'}
 Priority features: ${priorityFeatures?.join(', ') || 'none specified'}
 ${brandPreference ? `Preferred brands: ${brandPreference}` : ''}
 ${useCase ? `Use case: ${useCase}` : ''}
 
-Please recommend 3-4 specific products with brief explanations for each.`,
+Available products from our catalog that match these criteria:
+${productList || 'No specific products found in catalog.'}${specGuide}
+
+Please recommend 3-4 specific products from the catalog above with:
+1. Brief explanation for each recommendation
+2. How it fits their budget and needs
+3. Use relatable examples when explaining specifications`,
       },
     ];
 
@@ -194,17 +809,62 @@ Please recommend 3-4 specific products with brief explanations for each.`,
    * @param {string} category - Product category
    */
   async compareProducts(productIds, category) {
+    // Fetch actual product details from catalog
+    const productsToCompare = [];
+    for (const id of productIds) {
+      const product = this.getProduct(id);
+      if (product) {
+        productsToCompare.push(product);
+      }
+    }
+
+    // Build product details for prompt
+    let productDetails = '';
+    if (productsToCompare.length > 0) {
+      productDetails = productsToCompare.map(p => {
+        const priceInfo = p.skus?.[0]?.price;
+        const price = priceInfo
+          ? `₹${priceInfo.selling_price?.toLocaleString('en-IN') || priceInfo.mrp?.toLocaleString('en-IN')}`
+          : 'Price N/A';
+        return `PRODUCT: ${p.name}
+Brand: ${p.brand}
+Price: ${price}
+Rating: ${p.ratings?.average_rating || 'N/A'}/5
+Description: ${p.description || 'N/A'}
+Highlights: ${p.highlights?.join(', ') || 'N/A'}
+Options: ${JSON.stringify(p.options) || 'N/A'}`;
+      }).join('\n\n---\n\n');
+    } else {
+      productDetails = 'Products not found in catalog. Compare based on general knowledge.';
+    }
+
+    // Get spec guide for category
+    let specGuide = '';
+    if (this.specifications[category]) {
+      specGuide = `\n\nUse these relatable examples when explaining specifications:\n`;
+      const specs = this.specifications[category];
+      for (const [specType, specValues] of Object.entries(specs).slice(0, 5)) {
+        const firstSpec = specValues[0];
+        const key = Object.keys(firstSpec)[0];
+        specGuide += `- ${specType}: ${firstSpec[key].description}\n  Example: ${firstSpec[key].example}\n`;
+      }
+    }
+
     const messages = [
       {
         role: 'user',
         content: `Please compare these ${category} products: ${productIds.join(', ')}.
 
+${productsToCompare.length > 0 ? 'Here are the actual product details from our catalog:\n\n' + productDetails : productDetails}${specGuide}
+
 Provide a detailed comparison covering:
-1. Key specifications
+1. Key specifications (use relatable examples from above)
 2. Pros and cons of each
 3. Value for money analysis
 4. Which one is better for different use cases
-5. Your recommendation`,
+5. Your recommendation
+
+When explaining specs, always use the real-world examples to make it easy to understand.`,
       },
     ];
 
@@ -219,17 +879,59 @@ Provide a detailed comparison covering:
    * @param {string} category - Product category
    */
   async getProductDetails(productName, category) {
+    // Try to find the product in catalog
+    const product = this.getProduct(productName);
+
+    let productContext = '';
+    if (product) {
+      const priceInfo = product.skus?.[0]?.price;
+      const price = priceInfo
+        ? `₹${priceInfo.selling_price?.toLocaleString('en-IN') || priceInfo.mrp?.toLocaleString('en-IN')}`
+        : 'Price N/A';
+
+      productContext = `Here is the actual product information from our catalog:
+
+Product: ${product.name}
+Brand: ${product.brand}
+Category: ${product.category}
+Price: ${price}
+Rating: ${product.ratings?.average_rating || 'N/A'}/5 (${product.ratings?.total_reviews || 0} reviews)
+Description: ${product.description || 'N/A'}
+Highlights: ${product.highlights?.join(', ') || 'N/A'}
+Available Options: ${JSON.stringify(product.options) || 'N/A'}
+
+Top Review: ${product.reviews?.[0] ? `"${product.reviews[0].review_text}" - ${product.reviews[0].user_name}, ${product.reviews[0].rating}/5 stars` : 'No reviews available'}
+
+Based on this product data, provide a comprehensive overview.`;
+    }
+
+    // Get spec guide for category
+    let specGuide = '';
+    if (this.specifications[category]) {
+      specGuide = `\n\nUse these relatable examples when explaining specifications:\n`;
+      const specs = this.specifications[category];
+      for (const [specType, specValues] of Object.entries(specs).slice(0, 5)) {
+        const firstSpec = specValues[0];
+        const key = Object.keys(firstSpec)[0];
+        specGuide += `- ${specType}: ${firstSpec[key].description}\n  Example: ${firstSpec[key].example}\n`;
+      }
+    }
+
     const messages = [
       {
         role: 'user',
         content: `Tell me about the ${productName} (${category}).
 
+${productContext || 'Product not found in catalog. Provide general information.'}${specGuide}
+
 Include:
-1. Key specifications
+1. Key specifications (explain with relatable examples)
 2. Standout features
 3. Pros and cons
 4. Who should buy this
-5. Price range in India`,
+5. Price and value analysis
+
+Make technical specifications easy to understand using real-world examples.`,
       },
     ];
 
