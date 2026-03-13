@@ -14,10 +14,8 @@ const productIdMap = Object.fromEntries(
 
 // Transform products.json data to modal format
 function getProductSpecs(productId) {
-  const mappedId = productIdMap[productId];
-  if (!mappedId) return null;
 
-  const product = productsData.find(p => p.product_id === mappedId);
+  const product = productsData.find(p => p.product_id === productId);
   if (!product) return null;
 
   // Build camera string
@@ -73,7 +71,8 @@ function ProductDetailModal({ productId, isOpen, onClose, onCompare, onBuy }) {
               src={product.image}
               alt={product.name}
               onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
+                // e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
+                e.target.src = 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop';
               }}
             />
           </div>

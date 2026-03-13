@@ -1,65 +1,35 @@
 import { useState, useMemo } from 'react';
 import { X, ChevronLeft, Sparkles, Battery, Monitor, Camera, Cpu } from 'lucide-react';
 import './ProductComparison.css';
+import productsData from '../products.json';
 
-const comparisonData = {
-  1: {
-    id: 1,
-    name: 'Pixel 8 Pro',
-    shortName: 'Pixel 8',
-    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
-    price: 999,
-    specs: {
-      battery: { value: '5050 mAh', score: 85 },
-      display: { value: '6.7" OLED', score: 90 },
-      camera: { value: '50MP Triple', score: 95 },
-      ram: { value: '12GB', score: 90 },
-      processor: { value: 'Tensor G3', score: 85 },
-    },
-  },
-  2: {
-    id: 2,
-    name: 'iPhone 15 Pro',
-    shortName: 'iPhone 15',
-    image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=200&h=200&fit=crop',
-    price: 1099,
-    specs: {
-      battery: { value: '3274 mAh', score: 70 },
-      display: { value: '6.1" OLED', score: 88 },
-      camera: { value: '48MP Triple', score: 92 },
-      ram: { value: '8GB', score: 75 },
-      processor: { value: 'A17 Pro', score: 98 },
-    },
-  },
-  3: {
-    id: 3,
-    name: 'Galaxy S24 Ultra',
-    shortName: 'S24 Ultra',
-    image: 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=200&h=200&fit=crop',
-    price: 1299,
-    specs: {
-      battery: { value: '5000 mAh', score: 88 },
-      display: { value: '6.8" AMOLED', score: 95 },
-      camera: { value: '200MP Quad', score: 98 },
-      ram: { value: '12GB', score: 90 },
-      processor: { value: 'Snapdragon 8', score: 95 },
-    },
-  },
-  4: {
-    id: 4,
-    name: 'OnePlus 12',
-    shortName: 'OnePlus 12',
-    image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=200&h=200&fit=crop',
-    price: 799,
-    specs: {
-      battery: { value: '5400 mAh', score: 95 },
-      display: { value: '6.8" AMOLED', score: 92 },
-      camera: { value: '50MP Triple', score: 85 },
-      ram: { value: '16GB', score: 98 },
-      processor: { value: 'Snapdragon 8', score: 95 },
-    },
-  },
+const buildComparisonData = () => {
+  const smartphones = productsData
+    .filter(product => product.category === 'Smartphones')
+    .slice(0, 4);
+
+  const data = {};
+  smartphones.forEach(product => {
+    data[product.product_id] = {
+      id: product.product_id,
+      name: product.name,
+      shortName: product.name.split(' ').slice(0, 3).join(' '),
+      image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+      price: product.skus?.[0]?.price?.selling_price || 0,
+      specs: {
+        battery: { value: product.battery?.capacity_mAh ? `${product.battery.capacity_mAh} mAh` : 'N/A', score: product.battery?.capacity_mAh ? Math.min(product.battery.capacity_mAh / 60, 100) : 50 },
+        display: { value: product.display?.size_inches ? `${product.display.size_inches}" ${product.display.type}` : 'N/A', score: product.display?.size_inches ? Math.min(product.display.size_inches * 12, 100) : 70 },
+        camera: { value: product.camera?.rear?.[0]?.megapixels ? `${product.camera.rear[0].megapixels}MP` : 'N/A', score: product.camera?.rear?.[0]?.megapixels ? Math.min(product.camera.rear[0].megapixels / 2.5, 100) : 70 },
+        ram: { value: product.memory?.ram || 'N/A', score: product.memory?.ram ? parseInt(product.memory.ram) * 5 : 60 },
+        processor: { value: product.processor?.chipset || 'N/A', score: product.processor?.chipset?.includes('A17') || product.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+      },
+    };
+  });
+
+  return data;
 };
+
+const comparisonData = buildComparisonData();
 
 const specLabels = {
   battery: { icon: Battery, label: 'Battery' },

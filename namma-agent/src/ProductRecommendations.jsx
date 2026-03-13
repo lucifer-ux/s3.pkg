@@ -1,43 +1,29 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Check, ArrowRightLeft, Info } from 'lucide-react';
 import ProductDetailModal from './ProductDetailModal';
 import './ProductRecommendations.css';
-
-const mockProducts = [
-  {
-    id: 1,
-    name: 'Pixel 8 Pro',
-    price: '$999',
-    tagline: 'Best camera in range',
-    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=400&h=400&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'iPhone 15 Pro',
-    price: '$1,099',
-    tagline: 'Best performance',
-    image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=400&h=400&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Galaxy S24 Ultra',
-    price: '$1,299',
-    tagline: 'Pro display quality',
-    image: 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop',
-  },
-  {
-    id: 4,
-    name: 'OnePlus 12',
-    price: '$799',
-    tagline: 'Fastest charging',
-    image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=400&fit=crop',
-  },
-];
+import productsData from '../products.json';
 
 function ProductRecommendations({ onCompare }) {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [detailProductId, setDetailProductId] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const products = useMemo(() => {
+    const smartphones = productsData
+      .filter(product => product.category === 'Smartphones')
+      .slice(0, 4);
+
+    return smartphones.map((product) => ({
+      id: product.product_id,
+      name: product.name,
+      price: product.skus?.[0]?.price
+        ? `${product.skus[0].price.currency === 'INR' ? '₹' : '$'}${product.skus[0].price.selling_price?.toLocaleString()}`
+        : '',
+      tagline: product.highlights?.[0] || product.description?.substring(0, 60) + '...',
+      image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=400&h=400&fit=crop',
+    }));
+  }, []);
 
   const toggleSelection = (productId) => {
     setSelectedProducts((prev) => {
@@ -93,7 +79,7 @@ function ProductRecommendations({ onCompare }) {
 
       {/* Products Grid */}
       <div className="products-grid">
-        {mockProducts.map((product) => {
+        {products.map((product) => {
           const isSelected = selectedProducts.includes(product.id);
           
           return (
@@ -114,7 +100,8 @@ function ProductRecommendations({ onCompare }) {
                   alt={product.name}
                   className="product-image"
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
+                    // e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
+                    e.target.src = 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop';
                   }}
                 />
               </div>
