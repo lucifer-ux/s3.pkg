@@ -1,0 +1,303 @@
+/* Payment Overlay */
+   .payment-overlay {
+     position: fixed;
+     width: 375px;
+     height: 812px;
+     background-color: #ffffff;
+     z-index: 500;
+     left: 50%;
+     top: 50%;
+     transform: translate(-50%, -50%);
+     overflow: hidden;
+     border-radius: 40px;
+   }
+   
+   .payment-container {
+     width: 100%;
+     height: 100%;
+     display: flex;
+     flex-direction: column;
+     background-color: #ffffff;
+   }
+   
+   /* Header */
+   .payment-header {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 16px 20px 8px;
+     background-color: #ffffff;
+     flex-shrink: 0;
+   }
+   
+   .payment-back-btn {
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     border: none;
+     background-color: transparent;
+     color: #1a1a2e;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+   }
+   
+   .payment-title {
+     font-size: 26px;
+     font-weight: 800;
+     color: #1a1a2e;
+     margin: 0;
+   }
+   
+   .header-spacer {
+     width: 40px;
+   }
+   
+   .payment-subtitle {
+     font-size: 15px;
+     color: #6b7280;
+     margin: 0 20px 24px;
+     padding: 0;
+   }
+   
+   /* Scrollable Content */
+   .payment-content {
+     flex: 1;
+     overflow-y: auto;
+     padding: 0 20px 20px;
+   }
+   
+   .payment-content::-webkit-scrollbar {
+     display: none;
+   }
+   
+   /* Section Header */
+   .payment-section {
+     margin-bottom: 24px;
+   }
+   
+   .section-header {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     font-size: 13px;
+     font-weight: 700;
+     color: #4b5563;
+     letter-spacing: 0.5px;
+     margin-bottom: 16px;
+     text-transform: uppercase;
+   }
+   
+   .section-header svg {
+     color: #5b4fcf;
+   }
+   
+   /* EMI Card */
+   .emi-card {
+     background-color: #f9fafb;
+     border-radius: 16px;
+     margin-bottom: 12px;
+     overflow: hidden;
+     border: 2px solid transparent;
+     transition: all 0.2s ease;
+   }
+   
+   .emi-card.best-offer {
+     border-color: #5b4fcf;
+     background-color: #f5f3ff;
+   }
+   
+   .emi-card.expanded {
+     border-color: #5b4fcf;
+   }
+   
+   .emi-card-header {
+     display: flex;
+     align-items: center;
+     gap: 14px;
+     padding: 16px;
+     cursor: pointer;
+   }
+   
+   .bank-logo {
+     width: 48px;
+     height: 48px;
+     border-radius: 12px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     color: #ffffff;
+     font-size: 10px;
+     font-weight: 800;
+     text-align: center;
+     line-height: 1.1;
+     flex-shrink: 0;
+   }
+   
+   .emi-info {
+     flex: 1;
+   }
+   
+   .emi-title {
+     font-size: 15px;
+     font-weight: 600;
+     color: #1a1a2e;
+     margin: 0 0 6px 0;
+   }
+   
+   .emi-amount {
+     font-size: 22px;
+     font-weight: 800;
+     color: #5b4fcf;
+     margin: 0;
+   }
+   
+   .expand-icon {
+     color: #9ca3af;
+     flex-shrink: 0;
+   }
+   
+   /* EMI Details (Expanded) */
+   .emi-details {
+     padding: 0 16px 20px;
+   }
+   
+   /* Tenure Selector */
+   .tenure-selector {
+     display: flex;
+     gap: 8px;
+     margin-bottom: 20px;
+   }
+   
+   .tenure-btn {
+     flex: 1;
+     padding: 12px 8px;
+     border: 1.5px solid #e5e7eb;
+     border-radius: 10px;
+     background-color: #ffffff;
+     color: #374151;
+     font-size: 14px;
+     font-weight: 600;
+     cursor: pointer;
+     transition: all 0.2s ease;
+   }
+   
+   .tenure-btn.active {
+     background-color: #5b4fcf;
+     border-color: #5b4fcf;
+     color: #ffffff;
+   }
+   
+   /* Breakdown */
+   .breakdown {
+     background-color: #ffffff;
+     border-radius: 12px;
+     padding: 16px;
+     margin-bottom: 20px;
+   }
+   
+   .breakdown-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 10px 0;
+     font-size: 14px;
+     color: #6b7280;
+     border-bottom: 1px solid #f3f4f6;
+   }
+   
+   .breakdown-row:last-child {
+     border-bottom: none;
+   }
+   
+   .breakdown-row.total {
+     font-size: 16px;
+     font-weight: 700;
+     color: #1a1a2e;
+     padding-top: 16px;
+     margin-top: 8px;
+     border-top: 2px solid #e5e7eb;
+   }
+   
+   .breakdown-row .discount {
+     color: #22c55e;
+     font-weight: 600;
+   }
+   
+   .breakdown-row .zero-interest {
+     color: #5b4fcf;
+     font-weight: 600;
+   }
+   
+   /* Proceed Button */
+   .proceed-offer-btn {
+     width: 100%;
+     background: linear-gradient(135deg, #5b4fcf 0%, #4a3fb8 100%);
+     color: #ffffff;
+     border: none;
+     padding: 18px 24px;
+     border-radius: 14px;
+     font-size: 17px;
+     font-weight: 700;
+     cursor: pointer;
+     margin-bottom: 16px;
+     transition: all 0.2s ease;
+     box-shadow: 0 4px 16px rgba(91, 79, 207, 0.3);
+   }
+   
+   .proceed-offer-btn:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 6px 20px rgba(91, 79, 207, 0.4);
+   }
+   
+   /* AI Powered */
+   .ai-powered {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 12px;
+   }
+   
+   .explain-link {
+     background: none;
+     border: none;
+     color: #5b4fcf;
+     font-size: 14px;
+     font-weight: 600;
+     cursor: pointer;
+     text-decoration: underline;
+   }
+   
+   .ai-badge {
+     display: flex;
+     align-items: center;
+     gap: 4px;
+     background-color: #f0eeff;
+     color: #5b4fcf;
+     padding: 6px 10px;
+     border-radius: 20px;
+     font-size: 11px;
+     font-weight: 700;
+     letter-spacing: 0.5px;
+   }
+   
+   /* Loan Card */
+   .loan-card {
+     background-color: #f9fafb;
+   }
+   
+   .loan-card .emi-amount {
+     color: #6b7280;
+     font-size: 15px;
+     font-weight: 600;
+   }
+   
+   /* Responsive */
+   @media (max-width: 420px) {
+     .payment-overlay {
+       width: 100%;
+       height: 100vh;
+       border-radius: 0;
+     }
+   }

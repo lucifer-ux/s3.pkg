@@ -1,7 +1,10 @@
+
+
 import { useState } from 'react';
-   import { ArrowLeft, Share2, Sparkles, Crown, ArrowRight, RefreshCw, ArrowRightLeft } from 'lucide-react';
-   import ProductComparison from './ProductComparison';
-   import './ProductPurchaseScreen.css';
+import { ArrowLeft, Share2, Sparkles, Crown, ArrowRight, RefreshCw, ArrowRightLeft } from 'lucide-react';
+import ProductComparison from './ProductComparison';
+import PaymentOptions from './PaymentOptions';
+import './ProductPurchaseScreen.css';
    
    const purchaseData = {
      original: {
@@ -32,8 +35,11 @@ import { useState } from 'react';
    function ProductPurchaseScreen({ onBack, onBuy }) {
      const [currentProduct, setCurrentProduct] = useState(purchaseData.original);
      const [suggestedProduct] = useState(purchaseData.suggested);
+
+
      const [showComparison, setShowComparison] = useState(false);
      const [hasSwapped, setHasSwapped] = useState(false);
+     const [showPayment, setShowPayment] = useState(false);
    
      const handleSwap = () => {
        setCurrentProduct(suggestedProduct);
@@ -53,7 +59,17 @@ import { useState } from 'react';
        setShowComparison(false);
      };
    
+
+
      const handleBuy = () => {
+       setShowPayment(true);
+     };
+   
+     const handleClosePayment = () => {
+       setShowPayment(false);
+     };
+   
+     const handleProceedWithOffer = (offer) => {
        onBuy?.(currentProduct);
      };
    
@@ -161,6 +177,8 @@ import { useState } from 'react';
            </div>
          </div>
    
+
+
          {/* Comparison Modal */}
          {showComparison && (
            <ProductComparison
@@ -172,6 +190,15 @@ import { useState } from 'react';
                setHasSwapped(product.id === suggestedProduct.id);
                setShowComparison(false);
              }}
+           />
+         )}
+   
+         {/* Payment Options */}
+         {showPayment && (
+           <PaymentOptions
+             product={currentProduct}
+             onBack={handleClosePayment}
+             onProceed={handleProceedWithOffer}
            />
          )}
        </div>
