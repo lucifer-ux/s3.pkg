@@ -69,9 +69,12 @@ function AIShopper() {
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectionState, setSelectionState] = useState(null);
+  const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
+  const [selectedPrice, setSelectedPrice] = useState(null);
   const [cartCount] = useState(2);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [purchaseProduct, setPurchaseProduct] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showPurchase, setShowPurchase] = useState(false);
 
@@ -105,10 +108,12 @@ function AIShopper() {
   ];
 
   const handleCategoryClick = (category) => {
-    handleSendMessage(category);
+    // When category is clicked, start the flow
+    setConversationStep('awaiting_price');
+    handleSendMessage(category, true);
   };
 
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = async (text, isInitial = false) => {
     const messageText = text || inputValue.trim();
     if (!messageText) return;
 
@@ -159,6 +164,11 @@ function AIShopper() {
           )
         );
       }
+
+      // After first AI response, show price selection tiles
+      if (isInitial && conversationStep === 'awaiting_price') {
+        // Price selection will be rendered based on conversationStep
+      }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [...prev, {
@@ -178,51 +188,82 @@ function AIShopper() {
   };
 
   const handlePriceSelect = (priceRange) => {
+    // Add user selection message
+    const selectionText = `My budget is ${priceRange.label}`;
     const selectionMessage = {
       id: Date.now(),
-      text: `Selected price range: ${priceRange.label}`,
+      text: selectionText,
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
-    setSelectionState({ step: 'features', selectedPrice: priceRange });
+    setSelectedPrice(priceRange);
+    setConversationStep('awaiting_features');
 
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const aiMessage = {
-        id: Date.now() + 1,
-        text: 'Great! Now select the features that matter most to you.',
-        sender: 'assistant',
-        timestamp: new Date().toISOString(),
-        showSelections: true,
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 800);
+    // Send to AI
+    sendToAI(selectionText);
   };
 
   const handleFeatureSelect = (feature) => {
+    // Add user selection message
+    const selectionText = `I prioritize ${feature.label}`;
     const selectionMessage = {
       id: Date.now(),
-      text: `Priority: ${feature.label}`,
+      text: selectionText,
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
-    setSelectionState(null);
+    setConversationStep('showing_products');
 
+    // Send to AI
+    sendToAI(selectionText);
+  };
+
+  const sendToAI = async (text) => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const aiMessage = {
-        id: Date.now() + 1,
-        text: 'Perfect! I\'ve noted your preferences. Here are some recommendations based on your selections.',
+
+    try {
+      // Build message history
+      const apiMessages = messages
+        .filter(m => (m.sender === 'user' || m.sender === 'assistant'))
+        .map(m => ({
+          role: m.sender,
+          content: m.text
+        }));
+
+      // Add the selection
+      apiMessages.push({
+        role: 'user',
+        content: text
+      });
+
+      // Create AI response placeholder
+      const aiMessageId = Date.now() + 1;
+      setMessages((prev) => [...prev, {
+        id: aiMessageId,
+        text: '',
         sender: 'assistant',
         timestamp: new Date().toISOString(),
-        showProducts: true,
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      }]);
+
+      // Stream the response
+      let fullText = '';
+      for await (const chunk of chatApi.streamMessage(apiMessages)) {
+        fullText += chunk;
+        setMessages((prev) =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, text: fullText }
+              : m
+          )
+        );
+      }
+    } catch (error) {
+      console.error('AI send error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCompare = (selectedIds) => {
@@ -288,7 +329,6 @@ function AIShopper() {
   };
 
   const lastAiMessage = getLastAiMessage();
-  const shouldShowSelections = lastAiMessage?.showSelections && !isLoading;
 
   return (
     <div className="ai-shopper-container">
@@ -298,14 +338,6 @@ function AIShopper() {
             <Bot size={24} />
           </div>
           <span className="logo-text">ShopAI</span>
-        </div>
-        <div className="toolbar-cart">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </div>
       </div>
 
@@ -374,45 +406,64 @@ function AIShopper() {
           </div>
         )}
 
-        {shouldShowSelections && selectionState?.step === 'price' && (
-          <div className="selection-container">
-            <h4 className="selection-title">SELECT PRICE RANGE</h4>
-            <div className="price-range-buttons">
-              {priceRanges.map((range) => (
-                <button
-                  key={range.id}
-                  className="price-range-button"
-                  onClick={() => handlePriceSelect(range)}
-                >
-                  {range.label}
-                </button>
-              ))}
+        {/* Price Selection Tiles - shown as chat message */}
+        {!isLoading && conversationStep === 'awaiting_price' && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar">
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label">ASSISTANT</div>
+              <div className="message-bubble assistant price-selection">
+                <p className="selection-prompt">To help me find the best options for you, please select your budget range:</p>
+                <div className="chat-price-buttons">
+                  {priceRanges.map((range) => (
+                    <button
+                      key={range.id}
+                      className="chat-price-btn"
+                      onClick={() => handlePriceSelect(range)}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {shouldShowSelections && selectionState?.step === 'features' && (
-          <div className="selection-container">
-            <h4 className="selection-title">PRIORITY FEATURES</h4>
-            <div className="features-grid">
-              {priorityFeatures.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <button
-                    key={feature.id}
-                    className="feature-button"
-                    onClick={() => handleFeatureSelect(feature)}
-                  >
-                    <Icon size={20} />
-                    <span>{feature.label}</span>
-                  </button>
-                );
-              })}
+        {/* Feature Selection Tiles - shown as chat message */}
+        {!isLoading && conversationStep === 'awaiting_features' && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar">
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label">ASSISTANT</div>
+              <div className="message-bubble assistant feature-selection">
+                <p className="selection-prompt">Great! Now select the features that matter most to you:</p>
+                <div className="chat-feature-grid">
+                  {priorityFeatures.map((feature) => {
+                    const Icon = feature.icon;
+                    return (
+                      <button
+                        key={feature.id}
+                        className="chat-feature-btn"
+                        onClick={() => handleFeatureSelect(feature)}
+                      >
+                        <Icon size={24} />
+                        <span>{feature.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {lastAiMessage?.showProducts && !isLoading && (
+        {/* Product Recommendations */}
+        {conversationStep === 'showing_products' && !isLoading && (
           <ProductRecommendations onCompare={handleCompare} />
         )}
 
