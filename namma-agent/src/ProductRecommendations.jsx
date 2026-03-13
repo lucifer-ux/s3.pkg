@@ -79,19 +79,31 @@ function ProductRecommendations({ onCompare, recommendations }) {
   };
 
   const handleBuy = (product) => {
-    alert(`Proceeding to buy ${product.name}!`);
     handleCloseDetail();
+    onProductSelect?.(product);
   };
+
+  if (products.length === 0) {
+    return (
+      <div className="product-recommendations">
+        <div className="recommendations-header">
+          <span className="sparkle">✨</span>
+          <span>Here are the best phones for you</span>
+        </div>
+        <div className="no-products-message" style={{ padding: '20px', textAlign: 'center' }}>
+          <p>Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="product-recommendations">
-      {/* Header Banner */}
       <div className="recommendations-header">
         <span className="sparkle">✨</span>
         <span>Here are the best phones for you</span>
       </div>
 
-      {/* Products Grid */}
       <div className="products-grid">
         {products.map((product) => {
           const isSelected = selectedProducts.includes(product.id);
@@ -102,25 +114,21 @@ function ProductRecommendations({ onCompare, recommendations }) {
               className={`product-card ${isSelected ? 'selected' : ''}`}
               onClick={() => toggleSelection(product.id)}
             >
-              {/* Checkbox */}
               <div className={`product-checkbox ${isSelected ? 'checked' : ''}`}>
                 {isSelected && <Check size={14} />}
               </div>
 
-              {/* Product Image */}
               <div className="product-image-container">
                 <img
                   src={product.image}
                   alt={product.name}
                   className="product-image"
                   onError={(e) => {
-                    // e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
                     e.target.src = 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop';
                   }}
                 />
               </div>
 
-              {/* Product Info */}
               <div className="product-info">
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-price">{product.price}</p>
@@ -138,16 +146,16 @@ function ProductRecommendations({ onCompare, recommendations }) {
         })}
       </div>
 
-      {/* Product Detail Modal */}
-      <ProductDetailModal
-        productId={detailProductId}
-        isOpen={isDetailOpen}
-        onClose={handleCloseDetail}
-        onCompare={handleDetailCompare}
-        onBuy={handleBuy}
-      />
+      {isDetailOpen && (
+        <ProductDetailModal
+          productId={detailProductId}
+          isOpen={isDetailOpen}
+          onClose={handleCloseDetail}
+          onCompare={handleDetailCompare}
+          onBuy={handleBuy}
+        />
+      )}
 
-      {/* Compare Button */}
       {selectedProducts.length > 0 && (
         <button className="compare-button" onClick={handleCompare}>
           <ArrowRightLeft size={18} />

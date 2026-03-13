@@ -32,8 +32,8 @@ import './ProductPurchaseScreen.css';
      },
    };
    
-   function ProductPurchaseScreen({ onBack, onBuy }) {
-     const [currentProduct, setCurrentProduct] = useState(purchaseData.original);
+   function ProductPurchaseScreen({ product, onBack, onBuy, onPayViaLoan }) {
+     const [currentProduct, setCurrentProduct] = useState(product || purchaseData.original);
      const [suggestedProduct] = useState(purchaseData.suggested);
 
 
@@ -168,12 +168,31 @@ import './ProductPurchaseScreen.css';
              )}
            </div>
    
-           {/* Buy Button */}
            <div className="purchase-footer">
-             <button className="buy-now-btn" onClick={handleBuy}>
-               Buy Now
-               <ArrowRight size={20} />
-             </button>
+             {!showPaymentOptions ? (
+               <button className="buy-now-btn" onClick={() => setShowPaymentOptions(true)}>
+                 Buy Now
+                 <ArrowRight size={20} />
+               </button>
+             ) : (
+               <div className="payment-options">
+                 <h4 className="payment-options-title">Choose Payment Method</h4>
+                 <button className="payment-btn primary" onClick={handleBuy}>
+                   <span className="payment-btn-title">Pay Full Amount</span>
+                   <span className="payment-btn-amount">${currentProduct.price}.00</span>
+                 </button>
+                 <button className="payment-btn loan" onClick={onPayViaLoan}>
+                   <Wallet size={20} />
+                   <div className="payment-btn-content">
+                     <span className="payment-btn-title">Pay via Loan / EMI</span>
+                   </div>
+                   <ArrowRight size={18} />
+                 </button>
+                 <button className="payment-btn back" onClick={() => setShowPaymentOptions(false)}>
+                   Back
+                 </button>
+               </div>
+             )}
            </div>
          </div>
    
