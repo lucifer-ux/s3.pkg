@@ -1,0 +1,157 @@
+/* Voice Input Overlay - Bottom popup style */
+.voice-input-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 20px 20px;
+}
+
+/* Voice Input Modal - White popup */
+.voice-input-modal {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1), 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Transcript Display */
+.transcript-container {
+  width: 100%;
+  min-height: 40px;
+  text-align: center;
+}
+
+.transcript-text {
+  font-size: 16px;
+  color: #1f2937;
+  line-height: 1.5;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+.placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Waveform Container */
+.waveform-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 80px;
+  padding: 10px 0;
+}
+
+/* Waveform Bars */
+.waveform-bar {
+  width: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to top, #5b4fcf, #7c6fe3);
+  transition: height 0.05s ease-out, opacity 0.05s ease-out;
+  min-height: 10px;
+}
+
+/* Error Message */
+.voice-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 12px 16px;
+  width: 100%;
+}
+
+.voice-error p {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 0;
+  text-align: center;
+}
+
+/* Buttons Container */
+.voice-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+/* Cancel Button */
+.cancel-button {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 12px 24px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Done Button */
+.done-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #5b4fcf;
+  color: #ffffff;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(91, 79, 207, 0.3);
+  flex: 1;
+  max-width: 200px;
+}
+
+.done-button:hover {
+  background-color: #4a3fb8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(91, 79, 207, 0.4);
+}
+
+.done-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 420px) {
+  .voice-input-overlay {
+    padding: 0 16px 16px;
+  }
+
+  .voice-input-modal {
+    padding: 20px;
+  }
+
+  .waveform-bar {
+    width: 5px;
+  }
+
+  .done-button {
+    padding: 12px 24px;
+  }
+}
