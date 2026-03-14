@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
-import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot, X, ChevronLeft, Check } from 'lucide-react';
 import QRScannerModal from './QRScannerModal';
 import VoiceInputModal from './VoiceInputModal';
 import VoicePopup from './VoicePopup';
 import ProductRecommendations from './ProductRecommendations';
-import ProductComparison from './ProductComparison';
-import ProductPurchaseScreen from './ProductPurchaseScreen';
+import PaymentOptions from './PaymentOptions';
 import './AIShopper.css';
+import productsData from '../products.json';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -77,14 +77,12 @@ function AIShopper() {
   const [voiceUserMessage, setVoiceUserMessage] = useState('');
   const [voiceAiResponse, setVoiceAiResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
+  const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_device_type' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
+  const [awaitingResponse, setAwaitingResponse] = useState(null); // 'device_type', 'price_range', etc.
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [cartCount] = useState(2);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [comparisonData, setComparisonData] = useState(null);
   const [purchaseProduct, setPurchaseProduct] = useState(null);
-  const [showComparison, setShowComparison] = useState(false);
-  const [showPurchase, setShowPurchase] = useState(false);
 
   // Load apiRecommendations from localStorage on mount
   const [apiRecommendations, setApiRecommendations] = useState(() => {
@@ -158,6 +156,13 @@ function AIShopper() {
     { id: 'battery', label: 'Battery', icon: Battery },
     { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
     { id: '5g', label: '5G Support', icon: Signal },
+  ];
+
+  const deviceTypes = [
+    { id: 'smartphone', label: 'Smartphone', icon: '📱', description: 'Latest smartphones with advanced features' },
+    { id: 'feature_phone', label: 'Feature Phone', icon: '📞', description: 'Basic phones with long battery life' },
+    { id: 'tablet', label: 'Tablet', icon: '📟', description: 'Large screen devices for media and work' },
+    { id: 'accessories', label: 'Accessories', icon: '🎧', description: 'Cases, chargers, headphones & more' },
   ];
 
   const handleCategoryClick = (category) => {
@@ -245,9 +250,10 @@ function AIShopper() {
         );
       }
 
-      // After first AI response, show price selection tiles
-      if (isInitial && conversationStep === 'awaiting_price') {
-        // Price selection will be rendered based on conversationStep
+      // After first AI response about phones, show device type tiles
+      const lowerText = messageText.toLowerCase();
+      if ((lowerText.includes('phone') || lowerText.includes('mobile')) && conversationStep === 'initial') {
+        setAwaitingResponse('device_type');
       }
     } catch (error) {
       console.error('Chat error:', error);
@@ -267,6 +273,23 @@ function AIShopper() {
     handleSendMessage();
   };
 
+  const handleDeviceTypeSelect = (deviceType) => {
+    // Add user selection message
+    const selectionText = `I'm looking for a ${deviceType.label}`;
+    const selectionMessage = {
+      id: Date.now(),
+      text: selectionText,
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, selectionMessage]);
+    setAwaitingResponse(null);
+    setConversationStep('awaiting_price');
+
+    // Send to AI
+    sendToAI(selectionText);
+  };
+
   const handlePriceSelect = (priceRange) => {
     // Add user selection message
     const selectionText = `My budget is ${priceRange.label}`;
@@ -279,6 +302,7 @@ function AIShopper() {
     setMessages((prev) => [...prev, selectionMessage]);
     setSelectedPrice(priceRange);
     setConversationStep('awaiting_features');
+    setAwaitingResponse(null);
 
     // Send to AI
     sendToAI(selectionText);
@@ -330,7 +354,11 @@ function AIShopper() {
       // Stream the response
       let fullText = '';
       for await (const chunk of chatApi.streamMessage(apiMessages)) {
-        fullText += chunk;
+        if (chunk && typeof chunk === 'object' && chunk.content) {
+          fullText += chunk.content;
+        } else if (typeof chunk === 'string') {
+          fullText += chunk;
+        }
         setMessages((prev) =>
           prev.map(m =>
             m.id === aiMessageId
@@ -348,29 +376,87 @@ function AIShopper() {
 
   const handleCompare = (selectedIds) => {
     setSelectedProducts(selectedIds);
-    setShowComparison(true);
+    setConversationStep('comparing');
+    // Add comparison message to chat
+    setMessages((prev) => [...prev, {
+      id: Date.now(),
+      text: `Comparing ${selectedIds.length} phones side by side. Tap on a device to select it for purchase.`,
+      sender: 'assistant',
+      timestamp: new Date().toISOString(),
+    }]);
+  };
+
+  const handleSelectDeviceForPurchase = (product) => {
+    setPurchaseProduct(product);
+    setConversationStep('purchasing');
+    // Add purchase message to chat
+    setMessages((prev) => [...prev, {
+      id: Date.now(),
+      text: `Great choice! The ${product.name} is an excellent pick. Here are the payment options:`,
+      sender: 'assistant',
+      timestamp: new Date().toISOString(),
+    }]);
   };
 
   const handleCloseComparison = () => {
-    setShowComparison(false);
+    setConversationStep('showing_products');
+    setSelectedProducts([]);
   };
 
   const handleRemoveFromComparison = (productId) => {
-    setSelectedProducts((prev) => prev.filter((id) => id !== productId));
+    setSelectedProducts((prev) => {
+      const updated = prev.filter((id) => id !== productId);
+      if (updated.length < 2) {
+        setConversationStep('showing_products');
+      }
+      return updated;
+    });
   };
 
-  const handleBuyFromComparison = () => {
-    setShowComparison(false);
-    setShowPurchase(true);
+  const handleBuyFromComparison = (product) => {
+    handleSelectDeviceForPurchase(product);
   };
 
   const handleClosePurchase = () => {
-    setShowPurchase(false);
+    setConversationStep('comparing');
+    setPurchaseProduct(null);
   };
 
-  const handleFinalBuy = (product) => {
-    alert(`Successfully purchased ${product.name} for $${product.price}!`);
-    setShowPurchase(false);
+  const handleFinalBuy = (product, offer) => {
+    const offerText = offer ? ` with ${offer.bank} ${offer.type}` : '';
+    alert(`Successfully purchased ${product.name}${offerText}!`);
+    setConversationStep('initial');
+    setPurchaseProduct(null);
+    setSelectedProducts([]);
+    setMessages((prev) => [...prev, {
+      id: Date.now(),
+      text: `Congratulations! Your order for ${product.name}${offerText} has been placed successfully. Is there anything else I can help you with?`,
+      sender: 'assistant',
+      timestamp: new Date().toISOString(),
+    }]);
+  };
+
+  const handleUpgrade = (proVariant) => {
+    // Convert the proVariant to the same format as purchaseProduct
+    const upgradedProduct = {
+      id: proVariant.product_id,
+      name: proVariant.name,
+      shortName: proVariant.name.split(' ').slice(0, 3).join(' '),
+      image: proVariant.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+      price: proVariant.skus?.[0]?.price?.selling_price || 0,
+      priceDisplay: proVariant.skus?.[0]?.price
+        ? `${proVariant.skus[0].price.currency === 'INR' ? '₹' : '$'}${proVariant.skus[0].price.selling_price?.toLocaleString()}`
+        : '',
+    };
+    
+    setPurchaseProduct(upgradedProduct);
+    // Add upgrade message to chat
+    setMessages((prev) => [...prev, {
+      id: Date.now(),
+      text: `Great choice upgrading to ${proVariant.name}! This model has better features. Here are the payment options:`,
+      sender: 'assistant',
+      timestamp: new Date().toISOString(),
+    }]);
   };
 
   const handleOpenScanner = () => {
@@ -502,7 +588,6 @@ function AIShopper() {
     setIsVoicePopupOpen(false);
     setVoiceUserMessage('');
     setVoiceAiResponse('');
-    setIsAiSpeaking(false);
   };
 
   const getLastAiMessage = () => {
@@ -515,6 +600,366 @@ function AIShopper() {
   };
 
   const lastAiMessage = getLastAiMessage();
+
+  // Build product data for comparison
+  const buildProductData = () => {
+    const data = {};
+    productsData
+      .filter(product => product.category === 'Smartphones')
+      .forEach(product => {
+        data[product.product_id] = {
+          id: product.product_id,
+          name: product.name,
+          shortName: product.name.split(' ').slice(0, 3).join(' '),
+          image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+          price: product.skus?.[0]?.price?.selling_price || 0,
+          priceDisplay: product.skus?.[0]?.price
+            ? `${product.skus[0].price.currency === 'INR' ? '₹' : '$'}${product.skus[0].price.selling_price?.toLocaleString()}`
+            : '',
+          specs: {
+            battery: { value: product.battery?.capacity_mAh ? `${product.battery.capacity_mAh} mAh` : 'N/A', score: product.battery?.capacity_mAh ? Math.min(product.battery.capacity_mAh / 60, 100) : 50 },
+            display: { value: product.display?.size_inches ? `${product.display.size_inches}" ${product.display.type}` : 'N/A', score: product.display?.size_inches ? Math.min(product.display.size_inches * 12, 100) : 70 },
+            camera: { value: product.camera?.rear?.[0]?.megapixels ? `${product.camera.rear[0].megapixels}MP` : 'N/A', score: product.camera?.rear?.[0]?.megapixels ? Math.min(product.camera.rear[0].megapixels / 2.5, 100) : 70 },
+            ram: { value: product.memory?.ram || 'N/A', score: product.memory?.ram ? parseInt(product.memory.ram) * 5 : 60 },
+            processor: { value: product.processor?.chipset || 'N/A', score: product.processor?.chipset?.includes('A17') || product.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+          },
+        };
+      });
+    return data;
+  };
+
+  const productDataMap = buildProductData();
+
+  const specLabels = {
+    battery: { icon: Battery, label: 'Battery' },
+    display: { icon: Signal, label: 'Display' },
+    camera: { icon: Camera, label: 'Camera' },
+    ram: { icon: Battery, label: 'RAM' },
+    processor: { icon: Bot, label: 'Processor' },
+  };
+
+  // Inline Comparison Component
+  const InlineComparison = ({ selectedIds, onRemove, onSelect, onClose }) => {
+    const products = useMemo(() => {
+      return selectedIds.map(id => productDataMap[id]).filter(Boolean);
+    }, [selectedIds]);
+
+    const bestDevice = useMemo(() => {
+      if (products.length === 0) return null;
+      return products.reduce((best, current) => {
+        const bestScore = Object.values(best.specs).reduce((sum, s) => sum + s.score, 0);
+        const currentScore = Object.values(current.specs).reduce((sum, s) => sum + s.score, 0);
+        return currentScore > bestScore ? current : best;
+      });
+    }, [products]);
+
+    const getInsight = (specKey) => {
+      const values = products.map(p => ({ id: p.id, value: p.specs[specKey].value, score: p.specs[specKey].score }));
+      const best = values.reduce((max, curr) => curr.score > max.score ? curr : max);
+      return { bestId: best.id, text: best.value };
+    };
+
+    // Generate verdict message
+    const verdict = useMemo(() => {
+      if (!bestDevice || products.length < 2) return null;
+      
+      const winningSpecs = [];
+      Object.entries(bestDevice.specs).forEach(([key, spec]) => {
+        const isBest = products.every(p => p.id === bestDevice.id || spec.score >= p.specs[key].score);
+        if (isBest) {
+          const label = specLabels[key]?.label || key;
+          winningSpecs.push(label.toLowerCase());
+        }
+      });
+      
+      const specText = winningSpecs.slice(0, 2).join(' and ');
+      return {
+        winner: bestDevice.name,
+        reason: `Based on the comparison, the ${bestDevice.name} is the better choice with superior ${specText}. It offers the best overall value for your needs.`
+      };
+    }, [bestDevice, products]);
+
+    return (
+      <div className="inline-comparison">
+        <div className="inline-comparison-header">
+          <span className="comparison-title-chat">Compare {products.length} Phones</span>
+          <button className="close-comparison-btn" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+        
+        <div className="inline-comparison-grid">
+          {products.map(product => (
+            <div 
+              key={product.id} 
+              className="inline-comparison-device"
+              onClick={() => onSelect(product)}
+            >
+              <button 
+                className="remove-device-chat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(product.id);
+                }}
+              >
+                <X size={12} />
+              </button>
+              <img src={product.image} alt={product.name} className="device-img-chat" />
+              <span className="device-name-chat">{product.shortName}</span>
+              <span className="device-price-chat">{product.priceDisplay}</span>
+              {bestDevice?.id === product.id && <span className="best-badge">🏆 Best</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="inline-specs">
+          {Object.entries(specLabels).map(([key, { icon: Icon, label }]) => {
+            const insight = getInsight(key);
+            return (
+              <div key={key} className="inline-spec-row">
+                <div className="spec-header-chat">
+                  <Icon size={14} />
+                  <span>{label}</span>
+                </div>
+                <div className="spec-values-chat">
+                  {products.map(product => (
+                    <div 
+                      key={product.id} 
+                      className={`spec-value-chat ${product.id === insight.bestId ? 'best' : ''}`}
+                    >
+                      {product.specs[key].value}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Verdict Section */}
+        {verdict && (
+          <div className="comparison-verdict">
+            <div className="verdict-header">
+              <span className="verdict-icon">🏆</span>
+              <span className="verdict-title">Verdict</span>
+            </div>
+            <p className="verdict-text">{verdict.reason}</p>
+          </div>
+        )}
+
+        <div className="comparison-footer-chat">
+          <p className="select-hint">Tap a device above to select for purchase</p>
+        </div>
+      </div>
+    );
+  };
+
+  // Find Pro/upgrade variant of a product
+  const findProVariant = (currentProduct) => {
+    // Look for products with similar names but "Pro" or higher tier
+    const baseName = currentProduct.name.split(' ').slice(0, 2).join(' ');
+    const variants = productsData.filter(p => 
+      p.category === 'Smartphones' && 
+      p.name.includes(baseName) &&
+      p.product_id !== currentProduct.id &&
+      (p.skus?.[0]?.price?.selling_price || 0) > currentProduct.price
+    );
+    
+    // Return the cheapest upgrade option or null
+    return variants.length > 0 
+      ? variants.sort((a, b) => (a.skus?.[0]?.price?.selling_price || 0) - (b.skus?.[0]?.price?.selling_price || 0))[0]
+      : null;
+  };
+
+  // Inline Payment Component
+  const InlinePaymentOptions = ({ product, onBack, onProceed }) => {
+    const [expandedOffer, setExpandedOffer] = useState('hdfc');
+    const [selectedTenure, setSelectedTenure] = useState(6);
+    const [explainedOffer, setExplainedOffer] = useState(null);
+
+    const emiOffers = [
+      {
+        id: 'hdfc',
+        bank: 'HDFC',
+        type: '0% EMI',
+        tenureMonths: 6,
+        monthlyEMI: Math.round((product.price * 1.1) / 6),
+        mrpValue: product.price * 1.1,
+        instantDiscount: product.price * 0.07,
+        processingFee: 199,
+        interest: 0,
+        totalPayable: product.price * 1.03,
+        isBestOffer: true,
+      },
+      {
+        id: 'icici',
+        bank: 'ICICI',
+        type: 'Low Interest EMI',
+        tenureMonths: 12,
+        monthlyEMI: Math.round((product.price * 1.15) / 12),
+        mrpValue: product.price * 1.1,
+        instantDiscount: 0,
+        processingFee: 0,
+        interest: product.price * 0.05,
+        totalPayable: product.price * 1.15,
+        isBestOffer: false,
+      },
+    ];
+
+    const formatCurrency = (amount) => {
+      return '₹' + Math.round(amount).toLocaleString('en-IN');
+    };
+
+    const handleExplainOffer = (offer) => {
+      setExplainedOffer(offer.id);
+      // In a real implementation, this would call an AI service
+      // For now, we'll just show a simple explanation
+    };
+
+    return (
+      <div className="inline-payment-options">
+        <div className="payment-header-inline">
+          <h3>Pay in easy instalments</h3>
+          <p>Select an offer that fits your budget</p>
+        </div>
+
+        <div className="emi-options-list">
+          {emiOffers.sort((a, b) => (b.isBestOffer ? 1 : 0) - (a.isBestOffer ? 1 : 0)).map((offer) => {
+            const isExpanded = expandedOffer === offer.id;
+            const isExplained = explainedOffer === offer.id;
+            return (
+              <div key={offer.id} className={`emi-option-card ${offer.isBestOffer ? 'best' : ''}`}>
+                <div className="emi-option-header" onClick={() => setExpandedOffer(isExpanded ? null : offer.id)}>
+                  <div className="emi-bank-info">
+                    <span className="emi-bank-name">{offer.bank}</span>
+                    <span className="emi-type">{offer.type} · {offer.tenureMonths} months</span>
+                  </div>
+                  <div className="emi-monthly">
+                    <span className="emi-amount">{formatCurrency(offer.monthlyEMI)}/mo</span>
+                  </div>
+                </div>
+                
+                {isExpanded && (
+                  <div className="emi-details-inline">
+                    <div className="tenure-selector-inline">
+                      {[3, 6, 9, 12].map((months) => (
+                        <button
+                          key={months}
+                          className={`tenure-pill ${selectedTenure === months ? 'active' : ''}`}
+                          onClick={() => setSelectedTenure(months)}
+                        >
+                          {months}M
+                        </button>
+                      ))}
+                    </div>
+                    <div className="emi-breakdown-inline">
+                      <div><span>MRP Value</span><span>{formatCurrency(offer.mrpValue)}</span></div>
+                      <div><span>Instant Discount</span><span className="discount">-{formatCurrency(offer.instantDiscount)}</span></div>
+                      <div><span>Processing Fee</span><span>{formatCurrency(offer.processingFee)}</span></div>
+                      <div className="total-row"><span>Total Payable</span><span>{formatCurrency(offer.totalPayable)}</span></div>
+                    </div>
+                    
+                    {/* Explain Offer Section */}
+                    {isExplained && (
+                      <div className="offer-explanation-inline">
+                        <p>This {offer.type} from {offer.bank} allows you to pay {formatCurrency(offer.monthlyEMI)} per month for {offer.tenureMonths} months. 
+                        {offer.instantDiscount > 0 ? ` You save ${formatCurrency(offer.instantDiscount)} with instant discount.` : ''} 
+                        Total interest charged: {formatCurrency(offer.interest)}.</p>
+                      </div>
+                    )}
+                    
+                    <button className="proceed-btn-inline" onClick={() => onProceed(offer)}>
+                      Proceed with {offer.bank}
+                    </button>
+                    
+                    {/* AI Powered - Explain Offer */}
+                    <div className="ai-powered-inline">
+                      <button className="explain-offer-link" onClick={() => handleExplainOffer(offer)}>
+                        {isExplained ? 'Hide explanation' : 'Explain this offer'}
+                      </button>
+                      <span className="ai-badge-inline">
+                        ✨ POWERED BY AI
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <button className="back-to-product-btn" onClick={onBack}>
+          ← Back to product
+        </button>
+      </div>
+    );
+  };
+
+  // Inline Purchase Component
+  const InlinePurchase = ({ product, onBack, onBuy, onUpgrade }) => {
+    const [showPayment, setShowPayment] = useState(false);
+    
+    // Find Pro variant
+    const proVariant = useMemo(() => findProVariant(product), [product]);
+    
+    // Calculate upgrade price difference
+    const upgradePrice = proVariant 
+      ? (proVariant.skus?.[0]?.price?.selling_price || 0) - product.price 
+      : 0;
+
+    if (showPayment) {
+      return (
+        <div className="inline-purchase">
+          <InlinePaymentOptions 
+            product={product}
+            onBack={() => setShowPayment(false)}
+            onProceed={(offer) => onBuy(product, offer)}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="inline-purchase">
+        <div className="purchase-product-card">
+          <div className="purchase-product-img">
+            <img src={product.image} alt={product.name} />
+          </div>
+          <h3 className="purchase-product-name">{product.name}</h3>
+          <p className="purchase-product-price">{product.priceDisplay}</p>
+          
+          <div className="ai-reasoning">
+            <span>✨ AI Recommendation</span>
+            <p>Based on your preferences, this phone offers the best value with excellent camera and battery life.</p>
+          </div>
+
+          {proVariant && (
+            <div className="swap-suggestion">
+              <span>💡 Upgrade Available</span>
+              <p>For ₹{upgradePrice.toLocaleString()} more, you could get the {proVariant.name.split(' ').slice(-2).join(' ')} with better features.</p>
+              <div className="swap-actions">
+                <button className="swap-btn" onClick={() => onUpgrade(proVariant)}>
+                  Upgrade to Pro
+                </button>
+                <button className="keep-btn" onClick={() => setShowPayment(true)}>
+                  Continue with this
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="purchase-actions">
+          <button className="buy-now-btn" onClick={() => setShowPayment(true)}>
+            Buy Now - {product.priceDisplay}
+          </button>
+          <button className="back-link" onClick={onBack}>
+            Compare again
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="ai-shopper-container">
@@ -570,6 +1015,15 @@ function AIShopper() {
               <div className={`message-bubble ${message.sender}`}>
                 <p>{message.text}</p>
               </div>
+              {/* Show ProductRecommendations inline after AI message when showProducts is true */}
+              {message.sender === 'assistant' && message.showProducts && (
+                <div className="message-bubble assistant products" style={{ marginTop: '8px' }}>
+                  <ProductRecommendations 
+                    recommendations={message.recommendations || apiRecommendations} 
+                    onCompare={handleCompare} 
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -592,14 +1046,42 @@ function AIShopper() {
           </div>
         )}
 
-        {/* Price Selection Tiles - shown as chat message */}
-        {!isLoading && conversationStep === 'awaiting_price' && (
+        {/* Device Type Selection Tiles - shown when AI asks what type of device */}
+        {!isLoading && awaitingResponse === 'device_type' && (
           <div className="message-wrapper assistant">
-            <div className="message-avatar assistant-avatar">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
             </div>
             <div className="message-content">
-              <div className="message-label">ASSISTANT</div>
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
+              <div className="message-bubble assistant device-type-selection">
+                <p className="selection-prompt">What type of device are you looking for?</p>
+                <div className="device-type-grid">
+                  {deviceTypes.map((device) => (
+                    <button
+                      key={device.id}
+                      className="device-type-btn"
+                      onClick={() => handleDeviceTypeSelect(device)}
+                    >
+                      <span className="device-icon">{device.icon}</span>
+                      <span className="device-label">{device.label}</span>
+                      <span className="device-desc">{device.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Price Selection Tiles - continuation of AI message (no duplicate avatar) */}
+        {!isLoading && awaitingResponse === 'price_range' && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
               <div className="message-bubble assistant price-selection">
                 <p className="selection-prompt">To help me find the best options for you, please select your budget range:</p>
                 <div className="chat-price-buttons">
@@ -618,14 +1100,14 @@ function AIShopper() {
           </div>
         )}
 
-        {/* Feature Selection Tiles - shown as chat message */}
+        {/* Feature Selection Tiles - continuation of AI message (no duplicate avatar) */}
         {!isLoading && conversationStep === 'awaiting_features' && (
           <div className="message-wrapper assistant">
-            <div className="message-avatar assistant-avatar">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
             </div>
             <div className="message-content">
-              <div className="message-label">ASSISTANT</div>
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
               <div className="message-bubble assistant feature-selection">
                 <p className="selection-prompt">Great! Now select the features that matter most to you:</p>
                 <div className="chat-feature-grid">
@@ -648,8 +1130,59 @@ function AIShopper() {
           </div>
         )}
 
-        {lastAiMessage?.showProducts && !isLoading && (
-          <ProductRecommendations onCompare={handleCompare} recommendations={apiRecommendations} />
+        {/* Product Recommendations - wrapped in chat message */}
+        {conversationStep === 'showing_products' && !isLoading && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
+              <div className="message-bubble assistant products">
+                <ProductRecommendations onCompare={handleCompare} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inline Comparison - shown in chat */}
+        {conversationStep === 'comparing' && selectedProducts.length >= 2 && !isLoading && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
+              <div className="message-bubble assistant comparison">
+                <InlineComparison 
+                  selectedIds={selectedProducts} 
+                  onRemove={handleRemoveFromComparison}
+                  onSelect={handleSelectDeviceForPurchase}
+                  onClose={handleCloseComparison}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inline Purchase - shown in chat */}
+        {conversationStep === 'purchasing' && purchaseProduct && !isLoading && (
+          <div className="message-wrapper assistant">
+            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
+              <Bot size={20} />
+            </div>
+            <div className="message-content">
+              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
+              <div className="message-bubble assistant purchase">
+                <InlinePurchase 
+                  product={purchaseProduct}
+                  onBack={handleClosePurchase}
+                  onBuy={handleFinalBuy}
+                  onUpgrade={handleUpgrade}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         <div ref={messagesEndRef} />
@@ -680,22 +1213,6 @@ function AIShopper() {
           </div>
         </form>
       </div>
-
-      {showComparison && (
-        <ProductComparison
-          selectedIds={selectedProducts}
-          onClose={handleCloseComparison}
-          onRemove={handleRemoveFromComparison}
-          onBuy={handleBuyFromComparison}
-        />
-      )}
-
-      {showPurchase && (
-        <ProductPurchaseScreen
-          onBack={handleClosePurchase}
-          onBuy={handleFinalBuy}
-        />
-      )}
 
       <QRScannerModal
         isOpen={isScannerOpen}

@@ -195,37 +195,45 @@
    }
 
 /* Special message types - full width */
-.message-bubble.products,
 .message-bubble.comparison,
 .message-bubble.purchase,
-.message-bubble.payment,
-.message-bubble.price-selection,
-.message-bubble.feature-selection {
+.message-bubble.payment {
   background-color: transparent;
   padding: 0;
   max-width: 100%;
 }
 
-/* Chat Price Selection */
-.chat-price-selection {
-  width: 100%;
+/* Products wrapper in chat */
+.message-bubble.products {
+  background-color: #f8f7fc !important;
+  border: 1px solid #e5e1f5;
+  padding: 16px;
+  max-width: 100%;
 }
 
-.selection-title {
-  font-size: 16px;
-  font-weight: 700;
+/* Chat Price Selection */
+.message-bubble.price-selection {
+  background-color: #f8f7fc !important;
+  border: 1px solid #e5e1f5;
+  padding: 16px;
+  max-width: 100%;
+}
+
+.selection-prompt {
+  font-size: 14px;
+  font-weight: 500;
   color: #1a1a2e;
   margin-bottom: 16px;
-  text-align: center;
+  line-height: 1.5;
 }
 
-.price-buttons {
+.chat-price-buttons {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.price-btn {
+.chat-price-btn {
   width: 100%;
   padding: 16px;
   background-color: #ffffff;
@@ -238,23 +246,26 @@
   transition: all 0.2s ease;
 }
 
-.price-btn:hover {
+.chat-price-btn:hover {
   border-color: #5b4fcf;
   background-color: #f5f3ff;
 }
 
 /* Chat Feature Selection */
-.chat-feature-selection {
-  width: 100%;
+.message-bubble.feature-selection {
+  background-color: #f8f7fc !important;
+  border: 1px solid #e5e1f5;
+  padding: 16px;
+  max-width: 100%;
 }
 
-.feature-grid {
+.chat-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
-.feature-btn {
+.chat-feature-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -267,16 +278,16 @@
   transition: all 0.2s ease;
 }
 
-.feature-btn:hover {
+.chat-feature-btn:hover {
   border-color: #5b4fcf;
   background-color: #f5f3ff;
 }
 
-.feature-btn svg {
+.chat-feature-btn svg {
   color: #5b4fcf;
 }
 
-.feature-btn span {
+.chat-feature-btn span {
   font-size: 14px;
   font-weight: 600;
   color: #1a1a2e;
@@ -847,6 +858,350 @@
   max-width: 100%;
 }
 
+/* Inline Comparison Styles */
+.message-bubble.comparison {
+  background-color: #f8f7fc !important;
+  border: 1px solid #e5e1f5;
+  padding: 16px;
+  max-width: 100%;
+}
+
+.inline-comparison {
+  width: 100%;
+}
+
+.inline-comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.comparison-title-chat {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.close-comparison-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.inline-comparison-grid {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.inline-comparison-device {
+  flex: 1;
+  min-width: 100px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.inline-comparison-device:hover {
+  border-color: #5b4fcf;
+}
+
+.remove-device-chat {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.device-img-chat {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.device-name-chat {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.device-price-chat {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5b4fcf;
+}
+
+.best-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #5b4fcf 0%, #7c3aed 100%);
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 6px;
+}
+
+.inline-specs {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.inline-spec-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.inline-spec-row:last-child {
+  border-bottom: none;
+}
+
+.spec-header-chat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.spec-values-chat {
+  display: flex;
+  gap: 12px;
+}
+
+.spec-value-chat {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.spec-value-chat.best {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #16a34a;
+}
+
+.comparison-footer-chat {
+  text-align: center;
+}
+
+.select-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Comparison Verdict */
+.comparison-verdict {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  border-left: 4px solid #22c55e;
+}
+
+.verdict-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.verdict-icon {
+  font-size: 20px;
+}
+
+.verdict-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.verdict-text {
+  font-size: 13px;
+  color: #15803d;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Inline Purchase Styles */
+.message-bubble.purchase {
+  background-color: #f8f7fc !important;
+  border: 1px solid #e5e1f5;
+  padding: 16px;
+  max-width: 100%;
+}
+
+.inline-purchase {
+  width: 100%;
+}
+
+.back-btn-chat {
+  background: none;
+  border: none;
+  color: #5b4fcf;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+  padding: 0;
+}
+
+.purchase-product-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.purchase-product-img {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+}
+
+.purchase-product-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.purchase-product-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.purchase-product-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: #5b4fcf;
+  margin-bottom: 16px;
+}
+
+.ai-reasoning {
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.ai-reasoning span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b4fcf;
+}
+
+.ai-reasoning p {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 6px 0 0;
+}
+
+.swap-suggestion {
+  background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: left;
+}
+
+.swap-suggestion span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.swap-suggestion p {
+  font-size: 13px;
+  color: #78350f;
+  margin: 6px 0 12px;
+}
+
+.swap-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.swap-btn, .keep-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.swap-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.keep-btn {
+  background: white;
+  border: 1.5px solid #d6d3d1;
+  color: #78716c;
+}
+
+.purchase-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buy-now-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #5b4fcf 0%, #4a3fb8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
    /* Input Section */
    .input-section {
      padding: 16px 20px 24px;
@@ -906,6 +1261,268 @@
      background-color: #ffffff;
      color: #9ca3af;
      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+   }
+
+   /* Inline Payment Options */
+   .inline-payment-options {
+     width: 100%;
+   }
+
+   .payment-header-inline {
+     margin-bottom: 16px;
+   }
+
+   .payment-header-inline h3 {
+     font-size: 16px;
+     font-weight: 700;
+     color: #1a1a2e;
+     margin-bottom: 4px;
+   }
+
+   .payment-header-inline p {
+     font-size: 13px;
+     color: #6b7280;
+     margin: 0;
+   }
+
+   .emi-options-list {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     margin-bottom: 16px;
+   }
+
+   .emi-option-card {
+     background: white;
+     border-radius: 12px;
+     border: 2px solid #e5e7eb;
+     overflow: hidden;
+   }
+
+   .emi-option-card.best {
+     border-color: #5b4fcf;
+     background: linear-gradient(135deg, #f5f3ff 0%, #f0eeff 100%);
+   }
+
+   .emi-option-header {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 14px 16px;
+     cursor: pointer;
+   }
+
+   .emi-bank-info {
+     display: flex;
+     flex-direction: column;
+   }
+
+   .emi-bank-name {
+     font-size: 14px;
+     font-weight: 700;
+     color: #1a1a2e;
+   }
+
+   .emi-type {
+     font-size: 12px;
+     color: #6b7280;
+   }
+
+   .emi-monthly {
+     text-align: right;
+   }
+
+   .emi-amount {
+     font-size: 18px;
+     font-weight: 800;
+     color: #5b4fcf;
+   }
+
+   .emi-details-inline {
+     padding: 0 16px 16px;
+   }
+
+   .tenure-selector-inline {
+     display: flex;
+     gap: 8px;
+     margin-bottom: 12px;
+   }
+
+   .tenure-pill {
+     flex: 1;
+     padding: 8px;
+     background: #f3f4f6;
+     border: none;
+     border-radius: 8px;
+     font-size: 13px;
+     font-weight: 600;
+     color: #6b7280;
+     cursor: pointer;
+   }
+
+   .tenure-pill.active {
+     background: linear-gradient(135deg, #5b4fcf 0%, #7c3aed 100%);
+     color: white;
+   }
+
+   .emi-breakdown-inline {
+     background: #f9fafb;
+     border-radius: 10px;
+     padding: 12px;
+     margin-bottom: 12px;
+   }
+
+   .emi-breakdown-inline div {
+     display: flex;
+     justify-content: space-between;
+     padding: 8px 0;
+     font-size: 13px;
+     border-bottom: 1px solid #e5e7eb;
+   }
+
+   .emi-breakdown-inline div:last-child {
+     border-bottom: none;
+   }
+
+   .emi-breakdown-inline .total-row {
+     font-weight: 700;
+     color: #1a1a2e;
+     padding-top: 10px;
+     margin-top: 4px;
+     border-top: 2px solid #e5e7eb;
+   }
+
+   .emi-breakdown-inline .discount {
+     color: #22c55e;
+     font-weight: 600;
+   }
+
+   .proceed-btn-inline {
+     width: 100%;
+     padding: 14px;
+     background: linear-gradient(135deg, #5b4fcf 0%, #4a3fb8 100%);
+     color: white;
+     border: none;
+     border-radius: 10px;
+     font-size: 15px;
+     font-weight: 700;
+     cursor: pointer;
+   }
+
+   .back-to-product-btn {
+     width: 100%;
+     padding: 12px;
+     background: none;
+     border: 1.5px solid #d1d5db;
+     border-radius: 10px;
+     font-size: 14px;
+     font-weight: 600;
+     color: #6b7280;
+     cursor: pointer;
+   }
+
+   /* Device Type Selection */
+   .device-type-selection {
+     background-color: #f8f7fc !important;
+     border: 1px solid #e5e1f5;
+     padding: 16px;
+   }
+
+   .device-type-grid {
+     display: grid;
+     grid-template-columns: repeat(2, 1fr);
+     gap: 12px;
+   }
+
+   .device-type-btn {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     text-align: center;
+     padding: 20px 16px;
+     background: white;
+     border: 2px solid #e5e7eb;
+     border-radius: 16px;
+     cursor: pointer;
+     transition: all 0.2s ease;
+   }
+
+   .device-type-btn:hover {
+     border-color: #5b4fcf;
+     background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+     transform: translateY(-2px);
+     box-shadow: 0 4px 12px rgba(91, 79, 207, 0.15);
+   }
+
+   .device-icon {
+     font-size: 32px;
+     margin-bottom: 10px;
+   }
+
+   .device-label {
+     font-size: 15px;
+     font-weight: 700;
+     color: #1a1a2e;
+     margin-bottom: 4px;
+   }
+
+   .device-desc {
+     font-size: 11px;
+     color: #6b7280;
+     line-height: 1.4;
+   }
+
+   /* Explain Offer Section */
+   .offer-explanation-inline {
+     background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+     border-radius: 10px;
+     padding: 14px;
+     margin-bottom: 14px;
+     border-left: 3px solid #5b4fcf;
+   }
+
+   .offer-explanation-inline p {
+     font-size: 13px;
+     color: #4b5563;
+     line-height: 1.6;
+     margin: 0;
+   }
+
+   .ai-powered-inline {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 12px;
+     margin-top: 12px;
+     padding-top: 12px;
+     border-top: 1px solid #e5e7eb;
+   }
+
+   .explain-offer-link {
+     background: none;
+     border: none;
+     color: #5b4fcf;
+     font-size: 13px;
+     font-weight: 600;
+     text-decoration: underline;
+     cursor: pointer;
+     padding: 0;
+   }
+
+   .explain-offer-link:hover {
+     color: #4a3fb8;
+   }
+
+   .ai-badge-inline {
+     display: flex;
+     align-items: center;
+     gap: 4px;
+     background: linear-gradient(135deg, #f0eeff 0%, #e8e5ff 100%);
+     color: #5b4fcf;
+     padding: 6px 10px;
+     border-radius: 20px;
+     font-size: 11px;
+     font-weight: 700;
    }
 
    /* Responsive */
