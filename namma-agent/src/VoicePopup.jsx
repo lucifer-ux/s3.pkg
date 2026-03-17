@@ -10,7 +10,8 @@ function VoicePopup({
   userMessage,
   aiResponse,
   onAiFinishedSpeaking,
-  onTapToSpeak
+  onTapToSpeak,
+  autoStartListening = false
 }) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -136,11 +137,30 @@ function VoicePopup({
     if (!isOpen) {
       stopAudio();
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current.abort(); // Force abort
+        } catch {}
+        recognitionRef.current = null;
       }
       setIsListening(false);
     }
   }, [isOpen, stopAudio]);
+
+  // Cleanup on unmount (when key changes or component unmounts)
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current.abort();
+        } catch {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    };
+  }, [stopAudio]);
 
   // Start listening for user voice input
   const startListening = useCallback(() => {
@@ -191,6 +211,13 @@ function VoicePopup({
     recognitionRef.current = recognition;
     recognition.start();
   }, [onTapToSpeak, stopAudio]);
+
+  // Auto-start listening when popup opens
+  useEffect(() => {
+    if (isOpen && autoStartListening && !isListening && !isSpeaking && !aiResponse) {
+      startListening();
+    }
+  }, [isOpen, autoStartListening, isListening, isSpeaking, aiResponse, startListening]);
 
   // Audio visualization while listening
   useEffect(() => {

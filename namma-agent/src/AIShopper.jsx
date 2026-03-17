@@ -83,6 +83,18 @@ function AIShopper() {
   const [cartCount] = useState(2);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [purchaseProduct, setPurchaseProduct] = useState(null);
+  const [isEarphoneEnabled, setIsEarphoneEnabled] = useState(false);
+  const [autoStartVoiceListening, setAutoStartVoiceListening] = useState(false);
+  const [voicePopupKey, setVoicePopupKey] = useState(0);
+
+  const audioRef = useRef(null);
+  const lastDoubleTapRef = useRef(0);
+  const isVoicePopupOpenRef = useRef(isVoicePopupOpen);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isVoicePopupOpenRef.current = isVoicePopupOpen;
+  }, [isVoicePopupOpen]);
 
   // Load apiRecommendations from localStorage on mount
   const [apiRecommendations, setApiRecommendations] = useState(() => {
@@ -124,6 +136,115 @@ function AIShopper() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Earphone controls setup
+  const enableEarphoneControls = async () => {
+    try {
+      const audio = new Audio('/silent.mp3');
+      audio.loop = true;
+
+      // IMPORTANT: macOS ignores near-zero volume
+      audio.volume = 0.2;
+
+      await audio.play();
+
+      audioRef.current = audio;
+      setIsEarphoneEnabled(true);
+
+      setupMediaSession();
+
+    } catch (err) {
+      console.error('Failed to start audio:', err);
+    }
+  };
+
+  const setupMediaSession = () => {
+    if (!('mediaSession' in navigator)) {
+      console.warn('Media Session API NOT supported');
+      return;
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'AI Shopper',
+      artist: 'ShopAI',
+    });
+
+    navigator.mediaSession.playbackState = 'playing';
+
+    try {
+      navigator.mediaSession.setActionHandler('play', () => {
+        console.log('Earphone single tap detected');
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        console.log('Earphone pause detected');
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const now = Date.now();
+        const timeSinceLastTap = now - lastDoubleTapRef.current;
+
+        // Debounce: ignore if less than 500ms since last tap
+        if (timeSinceLastTap < 500) {
+          return;
+        }
+        lastDoubleTapRef.current = now;
+
+        // Use ref to get current state (not stale closure)
+        if (isVoicePopupOpenRef.current) {
+          console.log('Earphone double tap detected - closing voice popup and stopping listening');
+          // Force stop any active speech recognition by window.speechRecognition
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (SpeechRecognition) {
+            // Try to stop any active recognition instances
+            try {
+              const tempRecognition = new SpeechRecognition();
+              tempRecognition.stop();
+            } catch {}
+          }
+          handleCloseVoicePopup();
+        } else {
+          console.log('Earphone double tap detected - opening voice popup');
+          setAutoStartVoiceListening(true);
+          setVoicePopupKey(prev => prev + 1); // Force remount for clean state
+          setIsVoicePopupOpen(true);
+        }
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        console.log('Earphone triple tap detected');
+      });
+    } catch (e) {
+      console.warn('Media action not supported:', e);
+    }
+  };
+
+  // Auto-recover audio if browser pauses it
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState === 'visible' && audioRef.current) {
+        try {
+          await audioRef.current.play();
+        } catch {}
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
+  }, []);
+
+  // Keep forcing audio alive (macOS workaround)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
@@ -588,6 +709,7 @@ function AIShopper() {
     setIsVoicePopupOpen(false);
     setVoiceUserMessage('');
     setVoiceAiResponse('');
+    setAutoStartVoiceListening(false);
   };
 
   const getLastAiMessage = () => {
@@ -961,8 +1083,20 @@ function AIShopper() {
     );
   };
 
+  // Click handler to initialize earphone controls on first interaction
+  const handleFirstInteraction = async () => {
+    setIsEarphoneEnabled(true);
+    if (!isEarphoneEnabled && !audioRef.current) {
+      try {
+        await enableEarphoneControls();
+      } catch (err) {
+        console.log('Audio init failed:', err.message);
+      }
+    }
+  };
+
   return (
-    <div className="ai-shopper-container">
+    <div className="ai-shopper-container" onClick={handleFirstInteraction}>
       <div className="top-toolbar">
         <div className="toolbar-logo">
           <div className="logo-icon">
@@ -1199,6 +1333,7 @@ function AIShopper() {
               placeholder="Type your request..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              autoFocus
               className="chat-input"
             />
             {inputValue.trim() ? (
@@ -1227,12 +1362,14 @@ function AIShopper() {
       />
 
       <VoicePopup
+        key={voicePopupKey}
         isOpen={isVoicePopupOpen}
         onClose={handleCloseVoicePopup}
         userMessage={voiceUserMessage}
         aiResponse={voiceAiResponse}
         onAiFinishedSpeaking={handleAiFinishedSpeaking}
         onTapToSpeak={handleTapToSpeak}
+        autoStartListening={autoStartVoiceListening}
       />
     </div>
   );
