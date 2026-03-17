@@ -1000,13 +1000,69 @@ Make technical specifications easy to understand using real-world examples.`,
       }));
     } catch (error) {
       console.error('Get models error:', error);
-      // Return default models if API fails
       return [
         { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
         { id: 'gpt-4o', name: 'GPT-4o' },
         { id: 'claude-3-haiku', name: 'Claude 3 Haiku' },
         { id: 'gemini-pro', name: 'Gemini Pro' },
       ];
+    }
+  }
+
+  async loanAssistantChat(messages, context = {}) {
+    const loanSystemPrompt = `You are a helpful loan assistant for a credit marketplace in India. Your goal is to help users apply for personal loans, consumer durable loans, and credit cards.
+
+You are currently helping a user${context.productName ? ` who wants to finance a ${context.productName} priced at ${context.productPrice}` : ''}.
+
+Current user context:
+- Phone: ${context.phoneNumber || 'Not provided'}
+- PAN: ${context.panNumber || 'Not provided'}
+- Name: ${context.userName || 'Not provided'}
+- Step: ${context.currentStep || 'initial'}
+
+Guidelines:
+- Be conversational, friendly, and professional
+- Guide users through the loan application step by step
+- Ask for one piece of information at a time
+- When showing loan offers, present them clearly with key details (amount, interest rate, EMI, tenure)
+- Keep responses concise (2-3 sentences max)
+- If user provides PAN, acknowledge it and move to next step
+- If user asks about a specific loan, provide relevant details
+- Use Indian Rupee (INR) format for amounts
+- Be encouraging and reassuring about the process
+
+Available loan types:
+1. Personal Loan - up to 5 lakhs, interest 10-15%, tenure 12-60 months
+2. Consumer Durable Loan - up to 2 lakhs, 0% interest schemes available, tenure 3-12 months
+3. Credit Card - limits up to 1.5 lakhs, various rewards programs
+
+Respond naturally as if chatting with the user.`;
+
+    try {
+      const fullMessages = [
+        { role: 'system', content: loanSystemPrompt },
+        ...messages
+      ];
+
+      const response = await this.client.chat.completions.create({
+        model: this.defaultModel,
+        messages: fullMessages,
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      return {
+        success: true,
+        message: response.choices[0].message.content,
+        model: response.model,
+        usage: response.usage,
+      };
+    } catch (error) {
+      console.error('Loan chat error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   }
 }
