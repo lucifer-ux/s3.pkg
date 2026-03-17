@@ -62,7 +62,83 @@
         "helpful_votes": 44,
         "review_date": "2025-01-15"
       }
-    ]
+    ],
+    "display": {
+      "type": "Dynamic AMOLED 2X",
+      "size_inches": 6.1,
+      "resolution": "2340 x 1080",
+      "refresh_rate_hz": 120
+    },
+    "processor": {
+      "chipset": "Snapdragon 8 Gen 2",
+      "cpu": "8-core CPU",
+      "gpu": "Adreno 740"
+    },
+    "memory": {
+      "ram": "8GB"
+    },
+    "camera": {
+      "rear": [
+        {
+          "type": "Main",
+          "megapixels": 50,
+          "aperture": "f/1.8"
+        },
+        {
+          "type": "Ultra Wide",
+          "megapixels": 12,
+          "aperture": "f/2.2"
+        },
+        {
+          "type": "Telephoto",
+          "megapixels": 10,
+          "aperture": "f/2.4"
+        }
+      ],
+      "front": {
+        "megapixels": 12,
+        "aperture": "f/2.2"
+      }
+    },
+    "battery": {
+      "capacity_mAh": 3900,
+      "charging": "25W wired, 15W wireless"
+    },
+    "connectivity": [
+      "5G",
+      "WiFi 6E",
+      "Bluetooth 5.3",
+      "USB Type-C",
+      "NFC"
+    ],
+    "os": {
+      "name": "Android",
+      "version": "Android 13 with One UI 5.1"
+    },
+    "dimensions": {
+      "height_mm": 146.3,
+      "width_mm": 70.9,
+      "thickness_mm": 7.6,
+      "weight_g": 168
+    },
+    "images": [
+      "https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=400&h=400&fit=crop"
+    ],
+    "warranty": {
+      "type": "Manufacturer Warranty",
+      "duration": "1 Year"
+    },
+    "marketing": {
+      "is_featured": true,
+      "is_bestseller": true,
+      "tags": ["samsung", "flagship", "snapdragon", "5g"]
+    },
+    "seller": {
+      "seller_id": "seller_samsung_india",
+      "seller_name": "Samsung Official Store",
+      "seller_rating": 4.7
+    }
   },
   {
     "product_id": "prod_macbook_air_m2",

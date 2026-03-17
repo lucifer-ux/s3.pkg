@@ -10,6 +10,440 @@ import productsData from '../products.json';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// ===== FIRST MESSAGE PARSER =====
+
+/**
+ * Parse user's first message to extract shopping requirements
+ * Returns: { hasDeviceType, hasPrice, hasFeatures, deviceType, priceRange, features }
+ */
+const parseFirstMessage = (text) => {
+  const lowerText = text.toLowerCase();
+
+  // Detect device type
+  const devicePatterns = {
+    smartphone: ['smartphone', 'smart phone', 'mobile', 'phone', 'android', 'iphone'],
+    feature_phone: ['feature phone', 'basic phone', 'keypad phone'],
+    tablet: ['tablet', 'ipad', 'tab'],
+    accessories: ['accessories', 'case', 'charger', 'headphone', 'earphone', 'cover'],
+  };
+
+  let detectedDeviceType = null;
+  for (const [deviceType, keywords] of Object.entries(devicePatterns)) {
+    if (keywords.some(kw => lowerText.includes(kw))) {
+      detectedDeviceType = deviceType;
+      break;
+    }
+  }
+
+  // Detect price range
+  const pricePatterns = [
+    { range: { id: 'under10k', label: 'Under ₹10k', min: 0, max: 10000 }, regex: /under\s*10k|under\s*10000|below\s*10k|below\s*10000|within\s*10k|within\s*10000|less than\s*10k|less than\s*10000/i },
+    { range: { id: '10k-20k', label: '₹10k – ₹20k', min: 10000, max: 20000 }, regex: /10k-20k|10000-20000|10k\s*to\s*20k|10000\s*to\s*20000|between\s*10k\s*and\s*20k|between\s*10000\s*and\s*20000/i },
+    { range: { id: '20k-30k', label: '₹20k – ₹30k', min: 20000, max: 30000 }, regex: /20k-30k|20000-30000|20k\s*to\s*30k|20000\s*to\s*30000|between\s*20k\s*and\s*30k/i },
+    { range: { id: '20k-40k', label: '₹20k – ₹40k', min: 20000, max: 40000 }, regex: /20k-40k|20000-40000|20k\s*to\s*40k|20000\s*to\s*40000|between\s*20k\s*and\s*40k/i },
+    { range: { id: '30k-50k', label: '₹30k – ₹50k', min: 30000, max: 50000 }, regex: /30k-50k|30000-50000|30k\s*to\s*50k|30000\s*to\s*50000/i },
+    { range: { id: '40k+', label: '₹40k+', min: 40000, max: null }, regex: /40k\+|40000\+|above\s*40k|above\s*40000|over\s*40k|over\s*40000/i },
+  ];
+
+  let detectedPriceRange = null;
+  for (const pattern of pricePatterns) {
+    if (pattern.regex.test(lowerText)) {
+      detectedPriceRange = pattern.range;
+      break;
+    }
+  }
+
+  // If no explicit range, try to detect single price mentions
+  if (!detectedPriceRange) {
+    const singlePriceMatch = lowerText.match(/(\d+)k/i) || lowerText.match(/(\d{4,5})/);
+    if (singlePriceMatch) {
+      const price = parseInt(singlePriceMatch[1]) * (singlePriceMatch[0].includes('k') ? 1000 : 1);
+      if (price <= 15000) {
+        detectedPriceRange = { id: '10k-20k', label: '₹10k – ₹20k', min: 10000, max: 20000 };
+      } else if (price <= 25000) {
+        detectedPriceRange = { id: '20k-30k', label: '₹20k – ₹30k', min: 20000, max: 30000 };
+      } else if (price <= 35000) {
+        detectedPriceRange = { id: '20k-40k', label: '₹20k – ₹40k', min: 20000, max: 40000 };
+      } else {
+        detectedPriceRange = { id: '40k+', label: '₹40k+', min: 40000, max: null };
+      }
+    }
+  }
+
+  // Detect priority features
+  const featurePatterns = {
+    camera: ['camera', 'photo', 'selfie', 'photography', 'megapixel', 'mp', 'portrait', 'zoom'],
+    battery: ['battery', 'charge', 'long lasting', 'power', 'mah', 'backup'],
+    gaming: ['gaming', 'game', 'fps', 'pubg', 'bgmi', 'call of duty', 'gamer'],
+    '5g': ['5g', '5 g', 'fifth generation', 'fast internet'],
+  };
+
+  const detectedFeatures = [];
+  for (const [feature, keywords] of Object.entries(featurePatterns)) {
+    if (keywords.some(kw => lowerText.includes(kw))) {
+      detectedFeatures.push(feature);
+    }
+  }
+
+  return {
+    hasDeviceType: !!detectedDeviceType,
+    hasPrice: !!detectedPriceRange,
+    hasFeatures: detectedFeatures.length > 0,
+    deviceType: detectedDeviceType,
+    priceRange: detectedPriceRange,
+    features: detectedFeatures,
+    // Determine what's missing for follow-up
+    missingInfo: !detectedDeviceType ? 'device_type' :
+                 !detectedPriceRange ? 'price_range' :
+                 detectedFeatures.length === 0 ? 'features' : null,
+  };
+};
+
+// ===== PRODUCT FILTERING & MATCHING ENGINE =====
+
+/**
+ * Parse user requirements from conversation context
+ */
+const parseUserRequirements = (messages, selectedPrice, selectedFeatures) => {
+  const requirements = {
+    minPrice: selectedPrice?.min || 0,
+    maxPrice: selectedPrice?.max || Infinity,
+    features: selectedFeatures || [],
+    keywords: []
+  };
+
+  // Extract keywords from user messages
+  const userTexts = messages
+    .filter(m => m.sender === 'user')
+    .map(m => m.text.toLowerCase());
+
+  const allText = userTexts.join(' ');
+
+  // Detect feature priorities from natural language
+  if (allText.includes('camera') || allText.includes('photo') || allText.includes('selfie')) {
+    requirements.keywords.push('camera');
+  }
+  if (allText.includes('battery') || allText.includes('charge') || allText.includes('last')) {
+    requirements.keywords.push('battery');
+  }
+  if (allText.includes('game') || allText.includes('gaming') || allText.includes('fps')) {
+    requirements.keywords.push('gaming');
+  }
+  if (allText.includes('5g') || allText.includes('network')) {
+    requirements.keywords.push('5g');
+  }
+  if (allText.includes('display') || allText.includes('screen') || allText.includes('amoled')) {
+    requirements.keywords.push('display');
+  }
+
+  return requirements;
+};
+
+/**
+ * Calculate spec match score for a product based on user requirements
+ */
+const calculateSpecMatchScore = (product, requirements) => {
+  let score = 0;
+  let maxScore = 0;
+
+  const keywords = requirements.keywords;
+
+  // Camera scoring (up to 25 points)
+  if (keywords.includes('camera')) {
+    maxScore += 25;
+    const mainCamera = product.camera?.rear?.[0]?.megapixels || 0;
+    if (mainCamera >= 200) score += 25;
+    else if (mainCamera >= 108) score += 22;
+    else if (mainCamera >= 64) score += 18;
+    else if (mainCamera >= 50) score += 15;
+    else if (mainCamera >= 48) score += 12;
+    else score += Math.min(mainCamera / 4, 10);
+
+    // Bonus for multiple cameras
+    if (product.camera?.rear?.length >= 3) score += 5;
+    // Bonus for telephoto
+    if (product.camera?.rear?.some(c => c.type?.toLowerCase().includes('telephoto'))) score += 5;
+  }
+
+  // Battery scoring (up to 25 points)
+  if (keywords.includes('battery')) {
+    maxScore += 25;
+    const capacity = product.battery?.capacity_mAh || 0;
+    if (capacity >= 5500) score += 25;
+    else if (capacity >= 5000) score += 22;
+    else if (capacity >= 4500) score += 18;
+    else if (capacity >= 4000) score += 14;
+    else score += Math.max(0, (capacity - 3000) / 40);
+
+    // Bonus for fast charging
+    const charging = product.battery?.charging?.toLowerCase() || '';
+    if (charging.includes('120w')) score += 5;
+    else if (charging.includes('100w')) score += 4;
+    else if (charging.includes('80w')) score += 3;
+    else if (charging.includes('65w') || charging.includes('67w')) score += 2;
+  }
+
+  // Gaming performance scoring (up to 25 points)
+  if (keywords.includes('gaming')) {
+    maxScore += 25;
+    const chipset = product.processor?.chipset?.toLowerCase() || '';
+    const ram = parseInt(product.memory?.ram) || 0;
+    const refreshRate = product.display?.refresh_rate_hz || 60;
+
+    // Processor score
+    if (chipset.includes('a17') || chipset.includes('a18')) score += 15;
+    else if (chipset.includes('snapdragon 8 gen 3')) score += 15;
+    else if (chipset.includes('snapdragon 8 gen 2')) score += 13;
+    else if (chipset.includes('snapdragon 8')) score += 12;
+    else if (chipset.includes('dimensity 9300')) score += 14;
+    else if (chipset.includes('dimensity 9200')) score += 12;
+    else if (chipset.includes('dimensity 9000')) score += 10;
+    else if (chipset.includes('a16')) score += 12;
+    else if (chipset.includes('a15')) score += 10;
+    else score += 5;
+
+    // RAM score
+    if (ram >= 16) score += 5;
+    else if (ram >= 12) score += 4;
+    else if (ram >= 8) score += 3;
+    else score += 1;
+
+    // Refresh rate score
+    if (refreshRate >= 165) score += 5;
+    else if (refreshRate >= 144) score += 4;
+    else if (refreshRate >= 120) score += 3;
+    else score += 1;
+  }
+
+  // 5G support scoring (up to 15 points)
+  if (keywords.includes('5g')) {
+    maxScore += 15;
+    const connectivity = product.connectivity || [];
+    if (connectivity.some(c => c.toLowerCase().includes('5g'))) {
+      score += 15;
+    }
+  }
+
+  // Display quality scoring (up to 20 points)
+  if (keywords.includes('display')) {
+    maxScore += 20;
+    const displayType = product.display?.type?.toLowerCase() || '';
+    const refreshRate = product.display?.refresh_rate_hz || 60;
+    const resolution = product.display?.resolution?.toLowerCase() || '';
+
+    if (displayType.includes('amoled') || displayType.includes('oled')) score += 10;
+    else if (displayType.includes('ltpo')) score += 12;
+    else score += 5;
+
+    if (refreshRate >= 144) score += 5;
+    else if (refreshRate >= 120) score += 4;
+    else if (refreshRate >= 90) score += 2;
+
+    if (resolution.includes('3200') || resolution.includes('3088') || resolution.includes('2796')) score += 5;
+    else if (resolution.includes('2800') || resolution.includes('2856') || resolution.includes('2556')) score += 4;
+    else score += 2;
+  }
+
+  // Base score for products without specific feature requirements
+  if (maxScore === 0) {
+    // Give points for overall balanced specs
+    const camera = product.camera?.rear?.[0]?.megapixels || 0;
+    const battery = product.battery?.capacity_mAh || 0;
+    const chipset = product.processor?.chipset?.toLowerCase() || '';
+    const ram = parseInt(product.memory?.ram) || 0;
+
+    if (camera >= 50) score += 5;
+    if (battery >= 4500) score += 5;
+    if (chipset.includes('snapdragon 8') || chipset.includes('a17') || chipset.includes('a16') || chipset.includes('dimensity 9')) score += 5;
+    if (ram >= 8) score += 5;
+
+    maxScore = 20;
+  }
+
+  return { score, maxScore, percentage: maxScore > 0 ? (score / maxScore) * 100 : 0 };
+};
+
+/**
+ * Get product price from SKU
+ */
+const getProductPrice = (product) => {
+  return product.skus?.[0]?.price?.selling_price ||
+         product.skus?.[0]?.price?.mrp ||
+         0;
+};
+
+/**
+ * Check if product is within price range
+ */
+const isWithinPriceRange = (product, minPrice, maxPrice) => {
+  const price = getProductPrice(product);
+  return price >= minPrice && (maxPrice === null || price <= maxPrice);
+};
+
+/**
+ * Find products matching user requirements
+ * Returns: { matched: [], noResultsReason: string, nearestPrice: { lower: product, higher: product } }
+ */
+const findMatchingProducts = (requirements, products = productsData) => {
+  const { minPrice, maxPrice, keywords } = requirements;
+
+  // Filter by category (smartphones only for now)
+  let candidates = products.filter(p => p.category === 'Smartphones');
+
+  if (candidates.length === 0) {
+    return {
+      matched: [],
+      noResultsReason: 'NO_DEVICES_IN_CATEGORY',
+      nearestPrice: null,
+      allProducts: []
+    };
+  }
+
+  // Check if any products exist in the price range
+  const productsInPriceRange = candidates.filter(p => isWithinPriceRange(p, minPrice, maxPrice));
+
+  // Calculate spec scores for all products
+  const scoredProducts = candidates.map(product => {
+    const specScore = calculateSpecMatchScore(product, requirements);
+    const price = getProductPrice(product);
+    return {
+      product,
+      price,
+      specScore,
+      inPriceRange: price >= minPrice && (maxPrice === null || price <= maxPrice)
+    };
+  });
+
+  // If no products in price range, find nearest price options
+  if (productsInPriceRange.length === 0) {
+    const lowerPriced = scoredProducts.filter(p => p.price < minPrice).sort((a, b) => b.price - a.price);
+    const higherPriced = scoredProducts.filter(p => p.price > (maxPrice || Infinity)).sort((a, b) => a.price - b.price);
+
+    return {
+      matched: [],
+      noResultsReason: 'NO_DEVICES_IN_PRICE_RANGE',
+      nearestPrice: {
+        lower: lowerPriced[0]?.product || null,
+        higher: higherPriced[0]?.product || null
+      },
+      allProducts: scoredProducts
+    };
+  }
+
+  // Filter to products in price range and sort by spec match score
+  const matched = scoredProducts
+    .filter(p => p.inPriceRange)
+    .sort((a, b) => b.specScore.percentage - a.specScore.percentage);
+
+  // If we have feature requirements but no good matches, return partial matches
+  if (keywords.length > 0 && matched.every(m => m.specScore.percentage < 30)) {
+    return {
+      matched: matched.slice(0, 4),
+      noResultsReason: 'NO_DEVICES_MATCH_SPECS',
+      nearestPrice: null,
+      allProducts: scoredProducts,
+      partialMatch: true
+    };
+  }
+
+  return {
+    matched: matched.slice(0, 4),
+    noResultsReason: null,
+    nearestPrice: null,
+    allProducts: scoredProducts
+  };
+};
+
+/**
+ * Find pro/upgrade variant with smart price proximity check
+ * Only returns a pro variant if it's within reasonable upgrade price range (15-25% more)
+ */
+const findSmartProVariant = (currentProduct, allProducts = productsData) => {
+  const currentPrice = getProductPrice(currentProduct);
+  const baseName = currentProduct.name.split(' ').slice(0, 2).join(' ');
+
+  // Define upgrade price range (15% to 35% more expensive)
+  const minUpgradePrice = currentPrice * 1.15;
+  const maxUpgradePrice = currentPrice * 1.50;
+
+  // Find potential upgrades
+  const upgrades = allProducts.filter(p => {
+    const price = getProductPrice(p);
+    const isSameLineup = p.name.includes(baseName) || isRelatedModel(currentProduct, p);
+    const isPriceValid = price >= minUpgradePrice && price <= maxUpgradePrice;
+    const isHigherTier = isHigherTierModel(currentProduct, p);
+
+    return p.product_id !== currentProduct.product_id &&
+           p.category === 'Smartphones' &&
+           (isSameLineup || isHigherTier) &&
+           isPriceValid;
+  });
+
+  if (upgrades.length === 0) return null;
+
+  // Sort by price and return the best value upgrade
+  return upgrades.sort((a, b) => {
+    const priceA = getProductPrice(a);
+    const priceB = getProductPrice(b);
+    // Prefer upgrades closer to the minimum upgrade price (better value)
+    return Math.abs(priceA - minUpgradePrice) - Math.abs(priceB - minUpgradePrice);
+  })[0];
+};
+
+/**
+ * Check if two products are related models (same brand, similar naming)
+ */
+const isRelatedModel = (productA, productB) => {
+  if (productA.brand !== productB.brand) return false;
+
+  const nameA = productA.name.toLowerCase();
+  const nameB = productB.name.toLowerCase();
+
+  // Check for series patterns (e.g., Galaxy S24 and Galaxy S24 Ultra)
+  const seriesPatterns = [
+    /galaxy s(\d+)/, /iphone (\d+)/, /pixel (\d+)/,
+    /oneplus (\d+)/, /xiaomi (\d+)/, /nothing phone \((\d+)/
+  ];
+
+  for (const pattern of seriesPatterns) {
+    const matchA = nameA.match(pattern);
+    const matchB = nameB.match(pattern);
+    if (matchA && matchB && matchA[1] === matchB[1]) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Determine if productB is a higher tier model than productA
+ */
+const isHigherTierModel = (productA, productB) => {
+  const nameA = productA.name.toLowerCase();
+  const nameB = productB.name.toLowerCase();
+
+  // Check for Pro/Ultra/Plus/Max variants
+  const tierKeywords = ['pro max', 'ultra', 'pro', 'plus', 'max', '+'];
+  const hasHigherTier = tierKeywords.some(kw => nameB.includes(kw) && !nameA.includes(kw));
+
+  // Check for higher storage
+  const storageA = productA.skus?.[0]?.storage || '';
+  const storageB = productB.skus?.[0]?.storage || '';
+  const storageNumA = parseInt(storageA);
+  const storageNumB = parseInt(storageB);
+
+  return hasHigherTier || (storageNumB > storageNumA);
+};
+
+/**
+ * Format price with currency
+ */
+const formatPrice = (price, currency = 'INR') => {
+  const symbol = currency === 'INR' ? '₹' : '$';
+  return `${symbol}${price.toLocaleString('en-IN')}`;
+};
+
 // API client for chat
 const chatApi = {
   async sendMessage(messages) {
@@ -79,10 +513,16 @@ function AIShopper({ onProductSelect }) {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_device_type' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
   const [awaitingResponse, setAwaitingResponse] = useState(null); // 'device_type', 'price_range', etc.
+  const [isVoiceMode, setIsVoiceMode] = useState(false); // Track if user is in voice conversation mode
   const [selectedPrice, setSelectedPrice] = useState(null);
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
   const [cartCount] = useState(2);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [purchaseProduct, setPurchaseProduct] = useState(null);
+
+  // Filtered product recommendations based on user requirements
+  const [filteredRecommendations, setFilteredRecommendations] = useState([]);
+  const [filterStatus, setFilterStatus] = useState(null); // { noResultsReason, nearestPrice, message }
 
   // Load apiRecommendations from localStorage on mount
   const [apiRecommendations, setApiRecommendations] = useState(() => {
@@ -184,6 +624,138 @@ function AIShopper({ onProductSelect }) {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+
+    // Check if this is the first user message (excluding welcome)
+    const userMessageCount = messages.filter(m => m.sender === 'user').length;
+    const isFirstMessage = userMessageCount === 0;
+
+    // Parse first message for smart flow
+    if (isFirstMessage) {
+      const parsed = parseFirstMessage(messageText);
+
+      // If we have all the info needed, skip directly to recommendations
+      if (parsed.hasDeviceType && parsed.hasPrice && parsed.hasFeatures) {
+        setIsLoading(true);
+
+        // Set the detected values
+        setSelectedPrice(parsed.priceRange);
+        setSelectedFeatures(parsed.features);
+        setConversationStep('showing_products');
+
+        // Build requirements and find products
+        const requirements = {
+          minPrice: parsed.priceRange.min,
+          maxPrice: parsed.priceRange.max,
+          features: parsed.features,
+          keywords: parsed.features,
+        };
+
+        const result = findMatchingProducts(requirements);
+
+        // Generate personalized message based on first feature
+        const recommendations = result.matched.map(m => ({
+          id: m.product.product_id,
+          name: m.product.name,
+          price: formatPrice(m.price, m.product.skus?.[0]?.price?.currency),
+          rating: m.product.ratings?.average_rating,
+          highlights: m.product.highlights,
+          description: m.product.description,
+          image: m.product.images?.[0],
+          brand: m.product.brand,
+          specMatchScore: m.specScore.percentage
+        }));
+
+        const featureId = parsed.features[0];
+        const personalizedMessage = generatePersonalizedMessage(
+          featureId,
+          recommendations,
+          parsed.priceRange,
+          result.matched
+        );
+
+        // Add AI message with recommendations
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          text: personalizedMessage,
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+          showProducts: true,
+          recommendations
+        }]);
+
+        setFilteredRecommendations(recommendations);
+        setFilterStatus(result.noResultsReason ? { noResultsReason: result.noResultsReason, nearestPrice: result.nearestPrice, message: '' } : null);
+        setIsLoading(false);
+        return;
+      }
+
+      // We have partial info - determine what to ask for
+      if (parsed.missingInfo) {
+        // For text mode: show tiles asking for missing info
+        // For voice mode: speak the question
+
+        if (parsed.missingInfo === 'device_type') {
+          setConversationStep('awaiting_device_type');
+          setAwaitingResponse('device_type');
+
+          // Add a brief acknowledgment from AI
+          const acknowledgment = "I'd be happy to help you find the perfect device!";
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: acknowledgment,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          // If in voice mode, set the voice prompt
+          if (isVoiceMode) {
+            setVoiceAiResponse(getVoicePromptForCurrentStep());
+          }
+          return;
+        }
+
+        if (parsed.missingInfo === 'price_range') {
+          setSelectedPrice(parsed.priceRange);
+          setConversationStep('awaiting_price');
+          setAwaitingResponse('price_range');
+
+          // Add acknowledgment
+          const acknowledgment = `Great! I see you're looking for ${parsed.deviceType === 'smartphone' ? 'a smartphone' : parsed.deviceType === 'tablet' ? 'a tablet' : 'a device'}.`;
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: acknowledgment,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          if (isVoiceMode) {
+            setVoiceAiResponse(getVoicePromptForCurrentStep());
+          }
+          return;
+        }
+
+        if (parsed.missingInfo === 'features') {
+          setSelectedPrice(parsed.priceRange);
+          setConversationStep('awaiting_features');
+
+          // Add acknowledgment
+          const acknowledgment = `Perfect! I found your budget range. Now let me know what features matter most to you.`;
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: acknowledgment,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          if (isVoiceMode) {
+            setVoiceAiResponse(getVoicePromptForCurrentStep());
+          }
+          return;
+        }
+      }
+    }
+
+    // Default behavior for follow-up messages or if smart flow didn't apply
     setIsLoading(true);
 
     try {
@@ -283,11 +855,9 @@ function AIShopper({ onProductSelect }) {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
-    setAwaitingResponse(null);
+    // Set awaitingResponse to show price tiles - NO AI message, just tiles
+    setAwaitingResponse('price_range');
     setConversationStep('awaiting_price');
-
-    // Send to AI
-    sendToAI(selectionText);
   };
 
   const handlePriceSelect = (priceRange) => {
@@ -302,13 +872,15 @@ function AIShopper({ onProductSelect }) {
     setMessages((prev) => [...prev, selectionMessage]);
     setSelectedPrice(priceRange);
     setConversationStep('awaiting_features');
+    // Clear awaitingResponse to hide price tiles
     setAwaitingResponse(null);
-
-    // Send to AI
-    sendToAI(selectionText);
+    // NO AI message - just show feature tiles directly
   };
 
   const handleFeatureSelect = (feature) => {
+    // Track selected features
+    setSelectedFeatures(prev => [...prev, feature.id]);
+
     // Add user selection message
     const selectionText = `I prioritize ${feature.label}`;
     const selectionMessage = {
@@ -320,8 +892,129 @@ function AIShopper({ onProductSelect }) {
     setMessages((prev) => [...prev, selectionMessage]);
     setConversationStep('showing_products');
 
-    // Send to AI
-    sendToAI(selectionText);
+    // Run intelligent product filtering
+    const requirements = parseUserRequirements(
+      [...messages, selectionMessage],
+      selectedPrice,
+      [...selectedFeatures, feature.id]
+    );
+
+    const result = findMatchingProducts(requirements);
+
+    // Handle no results cases
+    if (result.noResultsReason) {
+      let noResultsMessage = '';
+
+      switch (result.noResultsReason) {
+        case 'NO_DEVICES_IN_PRICE_RANGE':
+          noResultsMessage = `No devices found in your budget. Try adjusting your price range.`;
+          break;
+
+        case 'NO_DEVICES_MATCH_SPECS':
+          noResultsMessage = `No exact matches. Showing closest options:`;
+          break;
+
+        case 'NO_DEVICES_IN_CATEGORY':
+          noResultsMessage = `No smartphones available right now. Please check back later.`;
+          break;
+      }
+
+      setFilterStatus({
+        noResultsReason: result.noResultsReason,
+        nearestPrice: result.nearestPrice,
+        message: noResultsMessage
+      });
+
+      // Add AI message about no results - short 1-2 liner
+      const showPartialResults = result.noResultsReason === 'NO_DEVICES_MATCH_SPECS' && result.matched.length > 0;
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        text: noResultsMessage,
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+        showProducts: showPartialResults,
+        recommendations: showPartialResults ? result.matched.map(m => ({
+          id: m.product.product_id,
+          name: m.product.name,
+          price: formatPrice(m.price, m.product.skus?.[0]?.price?.currency),
+          rating: m.product.ratings?.average_rating,
+          highlights: m.product.highlights,
+          description: m.product.description,
+          image: m.product.images?.[0],
+          brand: m.product.brand
+        })) : null
+      }]);
+
+      setFilteredRecommendations(result.matched.map(m => ({
+        id: m.product.product_id,
+        name: m.product.name,
+        price: formatPrice(m.price, m.product.skus?.[0]?.price?.currency),
+        rating: m.product.ratings?.average_rating,
+        highlights: m.product.highlights,
+        description: m.product.description,
+        image: m.product.images?.[0],
+        brand: m.product.brand
+      })));
+    } else {
+      // Results found - generate personalized recommendation message
+      const recommendations = result.matched.map(m => ({
+        id: m.product.product_id,
+        name: m.product.name,
+        price: formatPrice(m.price, m.product.skus?.[0]?.price?.currency),
+        rating: m.product.ratings?.average_rating,
+        highlights: m.product.highlights,
+        description: m.product.description,
+        image: m.product.images?.[0],
+        brand: m.product.brand,
+        specMatchScore: m.specScore.percentage
+      }));
+
+      // Generate personalized message based on selected features
+      const personalizedMessage = generatePersonalizedMessage(
+        feature.id,
+        recommendations,
+        selectedPrice
+      );
+
+      // Add AI message with personalized recommendation
+      setMessages((prev) => [...prev, {
+        id: Date.now() + 1,
+        text: personalizedMessage,
+        sender: 'assistant',
+        timestamp: new Date().toISOString(),
+        showProducts: true,
+        recommendations
+      }]);
+
+      setFilteredRecommendations(recommendations);
+      setFilterStatus(null);
+    }
+    // No API call - all messages are predefined
+  };
+
+  /**
+   * Generate personalized recommendation message based on user's priority feature
+   */
+  const generatePersonalizedMessage = (featureId, recommendations, priceRange) => {
+    const topPick = recommendations[0];
+    const priceLabel = priceRange?.label || 'your budget';
+
+    switch (featureId) {
+      case 'battery':
+        return `Here are the best battery phones in ${priceLabel}. The ${topPick.name} leads with great battery life.`;
+
+      case 'camera':
+        return `Here are the best camera phones in ${priceLabel}. The ${topPick.name} has excellent photo quality.`;
+
+      case 'gaming':
+        return `Here are the best gaming phones in ${priceLabel}. The ${topPick.name} delivers top performance.`;
+
+      case '5g':
+        return `Here are the best 5G phones in ${priceLabel}. The ${topPick.name} supports fastest connectivity.`;
+
+      default:
+        return `Here are the best phones in ${priceLabel}. The ${topPick.name} offers great value.`;
+    }
   };
 
   const sendToAI = async (text) => {
@@ -438,17 +1131,16 @@ function AIShopper({ onProductSelect }) {
 
   const handleUpgrade = (proVariant) => {
     // Convert the proVariant to the same format as purchaseProduct
+    const variantPrice = getProductPrice(proVariant);
     const upgradedProduct = {
       id: proVariant.product_id,
       name: proVariant.name,
       shortName: proVariant.name.split(' ').slice(0, 3).join(' '),
       image: proVariant.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
-      price: proVariant.skus?.[0]?.price?.selling_price || 0,
-      priceDisplay: proVariant.skus?.[0]?.price
-        ? `${proVariant.skus[0].price.currency === 'INR' ? '₹' : '$'}${proVariant.skus[0].price.selling_price?.toLocaleString()}`
-        : '',
+      price: variantPrice,
+      priceDisplay: formatPrice(variantPrice, proVariant.skus?.[0]?.price?.currency),
     };
-    
+
     setPurchaseProduct(upgradedProduct);
     // Add upgrade message to chat
     setMessages((prev) => [...prev, {
@@ -501,6 +1193,132 @@ function AIShopper({ onProductSelect }) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+
+    // Check if this is the first user message (excluding welcome)
+    const userMessageCount = messages.filter(m => m.sender === 'user').length;
+    const isFirstMessage = userMessageCount === 0;
+
+    // Parse first message for smart flow
+    if (isFirstMessage) {
+      const parsed = parseFirstMessage(transcript);
+
+      // If we have all the info needed, skip directly to recommendations
+      if (parsed.hasDeviceType && parsed.hasPrice && parsed.hasFeatures) {
+        setIsLoading(true);
+
+        // Set the detected values
+        setSelectedPrice(parsed.priceRange);
+        setSelectedFeatures(parsed.features);
+        setConversationStep('showing_products');
+
+        // Build requirements and find products
+        const requirements = {
+          minPrice: parsed.priceRange.min,
+          maxPrice: parsed.priceRange.max,
+          features: parsed.features,
+          keywords: parsed.features,
+        };
+
+        const result = findMatchingProducts(requirements);
+
+        // Generate personalized message based on first feature
+        const recommendations = result.matched.map(m => ({
+          id: m.product.product_id,
+          name: m.product.name,
+          price: formatPrice(m.price, m.product.skus?.[0]?.price?.currency),
+          rating: m.product.ratings?.average_rating,
+          highlights: m.product.highlights,
+          description: m.product.description,
+          image: m.product.images?.[0],
+          brand: m.product.brand,
+          specMatchScore: m.specScore.percentage
+        }));
+
+        const featureId = parsed.features[0];
+        const personalizedMessage = generatePersonalizedMessage(
+          featureId,
+          recommendations,
+          parsed.priceRange,
+          result.matched
+        );
+
+        // Add AI message with recommendations
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          text: personalizedMessage,
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+          showProducts: true,
+          recommendations
+        }]);
+
+        setFilteredRecommendations(recommendations);
+        setFilterStatus(result.noResultsReason ? { noResultsReason: result.noResultsReason, nearestPrice: result.nearestPrice, message: '' } : null);
+
+        // Set AI response for voice popup (will trigger TTS)
+        setVoiceAiResponse(personalizedMessage);
+        setIsLoading(false);
+        return;
+      }
+
+      // We have partial info - determine what to ask for
+      if (parsed.missingInfo) {
+        if (parsed.missingInfo === 'device_type') {
+          setConversationStep('awaiting_device_type');
+          setAwaitingResponse('device_type');
+
+          // Add acknowledgment
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: "I'd be happy to help you find the perfect device!",
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          // Set voice prompt for next question
+          setVoiceAiResponse("What type of device are you looking for? You can say smartphone, feature phone, tablet, or accessories.");
+          return;
+        }
+
+        if (parsed.missingInfo === 'price_range') {
+          setSelectedPrice(parsed.priceRange);
+          setConversationStep('awaiting_price');
+          setAwaitingResponse('price_range');
+
+          // Add acknowledgment
+          const acknowledgment = `Great! I see you're looking for ${parsed.deviceType === 'smartphone' ? 'a smartphone' : parsed.deviceType === 'tablet' ? 'a tablet' : 'a device'}.`;
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: acknowledgment,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          // Set voice prompt for next question
+          setVoiceAiResponse("What's your budget? You can say a price range like 10,000 to 20,000 rupees, or just tell me your maximum budget.");
+          return;
+        }
+
+        if (parsed.missingInfo === 'features') {
+          setSelectedPrice(parsed.priceRange);
+          setConversationStep('awaiting_features');
+
+          // Add acknowledgment
+          setMessages((prev) => [...prev, {
+            id: Date.now() + 1,
+            text: `Perfect! I found your budget range. Now let me know what features matter most to you.`,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          // Set voice prompt for next question
+          setVoiceAiResponse("What features matter most to you? You can say camera, battery, gaming, or 5G support.");
+          return;
+        }
+      }
+    }
+
+    // Default behavior for follow-up messages or if smart flow didn't apply
     setIsLoading(true);
 
     try {
@@ -588,6 +1406,39 @@ function AIShopper({ onProductSelect }) {
     setIsVoicePopupOpen(false);
     setVoiceUserMessage('');
     setVoiceAiResponse('');
+    setIsVoiceMode(false);
+  };
+
+  // Open voice popup and set voice mode
+  const handleOpenVoicePopup = () => {
+    setIsVoicePopupOpen(true);
+    setIsVoiceMode(true);
+
+    // If we're at a decision point, speak the question
+    const voicePrompt = getVoicePromptForCurrentStep();
+    if (voicePrompt) {
+      setVoiceAiResponse(voicePrompt);
+    }
+  };
+
+  // Get the appropriate voice prompt based on current conversation step
+  const getVoicePromptForCurrentStep = () => {
+    switch (conversationStep) {
+      case 'initial':
+        return "Hi! I'm your AI shopping assistant. What are you looking to buy today? You can say things like 'I want a smartphone' or 'Show me phones under 30000 rupees'.";
+
+      case 'awaiting_device_type':
+        return "What type of device are you looking for? You can say smartphone, feature phone, tablet, or accessories.";
+
+      case 'awaiting_price':
+        return "What's your budget? You can say a price range like 10,000 to 20,000 rupees, or just tell me your maximum budget.";
+
+      case 'awaiting_features':
+        return "What features matter most to you? You can say camera, battery, gaming, or 5G support.";
+
+      default:
+        return null;
+    }
   };
 
   const getLastAiMessage = () => {
@@ -754,20 +1605,28 @@ function AIShopper({ onProductSelect }) {
     );
   };
 
-  // Find Pro/upgrade variant of a product
+  // Find Pro/upgrade variant of a product using smart matching
   const findProVariant = (currentProduct) => {
-    // Look for products with similar names but "Pro" or higher tier
+    // First try to find a smart upgrade (within 15-35% price range)
+    const smartUpgrade = findSmartProVariant(currentProduct, productsData);
+    if (smartUpgrade) return smartUpgrade;
+
+    // Fallback: Look for products with similar names but "Pro" or higher tier
     const baseName = currentProduct.name.split(' ').slice(0, 2).join(' ');
-    const variants = productsData.filter(p => 
-      p.category === 'Smartphones' && 
-      p.name.includes(baseName) &&
-      p.product_id !== currentProduct.id &&
-      (p.skus?.[0]?.price?.selling_price || 0) > currentProduct.price
-    );
-    
+    const currentPrice = currentProduct.price || getProductPrice(currentProduct);
+
+    const variants = productsData.filter(p => {
+      const variantPrice = getProductPrice(p);
+      return p.category === 'Smartphones' &&
+             p.name.includes(baseName) &&
+             p.product_id !== currentProduct.id &&
+             p.product_id !== currentProduct.product_id &&
+             variantPrice > currentPrice;
+    });
+
     // Return the cheapest upgrade option or null
-    return variants.length > 0 
-      ? variants.sort((a, b) => (a.skus?.[0]?.price?.selling_price || 0) - (b.skus?.[0]?.price?.selling_price || 0))[0]
+    return variants.length > 0
+      ? variants.sort((a, b) => getProductPrice(a) - getProductPrice(b))[0]
       : null;
   };
 
@@ -898,14 +1757,17 @@ function AIShopper({ onProductSelect }) {
   // Inline Purchase Component
   const InlinePurchase = ({ product, onBack, onBuy, onUpgrade }) => {
     const [showPayment, setShowPayment] = useState(false);
-    
-    // Find Pro variant
+
+    // Find Pro variant using smart matching
     const proVariant = useMemo(() => findProVariant(product), [product]);
-    
+
     // Calculate upgrade price difference
-    const upgradePrice = proVariant 
-      ? (proVariant.skus?.[0]?.price?.selling_price || 0) - product.price 
+    const upgradePrice = proVariant
+      ? getProductPrice(proVariant) - (product.price || getProductPrice(product))
       : 0;
+
+    // Determine if upgrade is a "smart" upgrade (within reasonable range)
+    const isSmartUpgrade = proVariant && upgradePrice > 0 && upgradePrice <= (product.price || getProductPrice(product)) * 0.35;
 
     if (showPayment) {
       return (
@@ -933,13 +1795,18 @@ function AIShopper({ onProductSelect }) {
             <p>Based on your preferences, this phone offers the best value with excellent camera and battery life.</p>
           </div>
 
-          {proVariant && (
+          {proVariant && isSmartUpgrade && (
             <div className="swap-suggestion">
               <span>💡 Upgrade Available</span>
-              <p>For ₹{upgradePrice.toLocaleString()} more, you could get the {proVariant.name.split(' ').slice(-2).join(' ')} with better features.</p>
+              <p>For just {formatPrice(upgradePrice)} more ({Math.round((upgradePrice / (product.price || getProductPrice(product))) * 100)}% more), upgrade to the <strong>{proVariant.name}</strong> with enhanced features:</p>
+              <ul className="upgrade-features">
+                {proVariant.highlights?.slice(0, 2).map((highlight, idx) => (
+                  <li key={idx}>✓ {highlight}</li>
+                ))}
+              </ul>
               <div className="swap-actions">
                 <button className="swap-btn" onClick={() => onUpgrade(proVariant)}>
-                  Upgrade to Pro
+                  Upgrade to {proVariant.name.split(' ').slice(-2).join(' ')}
                 </button>
                 <button className="keep-btn" onClick={() => setShowPayment(true)}>
                   Continue with this
@@ -973,19 +1840,22 @@ function AIShopper({ onProductSelect }) {
       </div>
 
       <div className="messages-container">
-        <div className="header-section">
-          <div className="avatar-container">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
-              alt="AI Shopper Avatar"
-              className="avatar-image"
-            />
+        {/* Header - hidden when voice popup is open */}
+        {!isVoicePopupOpen && (
+          <div className="header-section">
+            <div className="avatar-container">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
+                alt="AI Shopper Avatar"
+                className="avatar-image"
+              />
+            </div>
+            <h1 className="welcome-title">Hello there!</h1>
+            <p className="welcome-subtitle">
+              I&apos;m your personal AI shopper. Tell me what&apos;s on your mind today.
+            </p>
           </div>
-          <h1 className="welcome-title">Hello there!</h1>
-          <p className="welcome-subtitle">
-            I&apos;m your personal AI shopper. Tell me what&apos;s on your mind today.
-          </p>
-        </div>
+        )}
 
         {/* <div className="category-section">
           <div className="category-buttons">
@@ -1001,41 +1871,42 @@ function AIShopper({ onProductSelect }) {
           </div>
         </div> */}
 
-        {messages.map((message) => (
-          <div key={message.id} className={`message-wrapper ${message.sender}`}>
-            {message.sender === 'assistant' && (
-              <div className="message-avatar assistant-avatar">
-                <Bot size={20} />
-              </div>
-            )}
-            <div className="message-content">
-              <div className="message-label">
-                {message.sender === 'user' ? 'YOU' : 'ASSISTANT'}
-              </div>
-              <div className={`message-bubble ${message.sender}`}>
-                <p>{message.text}</p>
-              </div>
-              {/* Show ProductRecommendations inline after AI message when showProducts is true */}
-              {message.sender === 'assistant' && message.showProducts && (
-                <div className="message-bubble assistant products" style={{ marginTop: '8px' }}>
-                  <ProductRecommendations 
-                    recommendations={message.recommendations || apiRecommendations} 
-                    onCompare={handleCompare}
-                    onProductSelect={onProductSelect}
-                  />
+        {/* Messages - hidden when voice popup is open, skip empty messages */}
+        {!isVoicePopupOpen && messages.map((message) => (
+          // Skip rendering empty assistant messages (placeholders during streaming)
+          (message.sender !== 'assistant' || message.text || message.showProducts) && (
+            <div key={message.id} className={`message-wrapper ${message.sender}`}>
+              {message.sender === 'assistant' && (
+                <div className="message-avatar assistant-avatar">
+                  <Bot size={20} />
                 </div>
               )}
+              <div className="message-content">
+                <div className={`message-bubble ${message.sender}`}>
+                  <p>{message.text}</p>
+                </div>
+                {/* Show ProductRecommendations inline after AI message when showProducts is true */}
+                {message.sender === 'assistant' && message.showProducts && (
+                  <div className="message-bubble assistant products" style={{ marginTop: '8px' }}>
+                    <ProductRecommendations
+                      recommendations={message.recommendations || apiRecommendations}
+                      onCompare={handleCompare}
+                      onProductSelect={onProductSelect}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )
         ))}
 
-        {isLoading && (
+        {/* Loading indicator - shows during streaming, hidden when voice popup is open */}
+        {!isVoicePopupOpen && isLoading && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar">
               <Bot size={20} />
             </div>
             <div className="message-content">
-              <div className="message-label">ASSISTANT</div>
               <div className="message-bubble assistant loading">
                 <div className="loading-dots">
                   <span></span>
@@ -1047,8 +1918,8 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Device Type Selection Tiles - shown when AI asks what type of device */}
-        {!isLoading && awaitingResponse === 'device_type' && (
+        {/* Device Type Selection Tiles - shown when AI asks what type of device (hidden in voice mode or popup open) */}
+        {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'device_type' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -1075,8 +1946,8 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Price Selection Tiles - continuation of AI message (no duplicate avatar) */}
-        {!isLoading && awaitingResponse === 'price_range' && (
+        {/* Price Selection Tiles - continuation of AI message (no duplicate avatar, hidden in voice mode or popup open) */}
+        {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'price_range' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -1101,8 +1972,8 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Feature Selection Tiles - continuation of AI message (no duplicate avatar) */}
-        {!isLoading && conversationStep === 'awaiting_features' && (
+        {/* Feature Selection Tiles - continuation of AI message (no duplicate avatar, hidden in voice mode or popup open) */}
+        {!isVoicePopupOpen && !isLoading && !isVoiceMode && conversationStep === 'awaiting_features' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -1131,61 +2002,27 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Product Recommendations - wrapped in chat message */}
-        {conversationStep === 'showing_products' && !isLoading && (
-          <div className="message-wrapper assistant">
-            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
-              <Bot size={20} />
-            </div>
-            <div className="message-content">
-              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
-              <div className="message-bubble assistant products">
-                <ProductRecommendations 
-                  onCompare={handleCompare}
-                  onProductSelect={onProductSelect}
-                />
-              </div>
-            </div>
+        {/* Inline Comparison - full width, outside message bubble (hidden when voice popup open) */}
+        {!isVoicePopupOpen && conversationStep === 'comparing' && selectedProducts.length >= 2 && !isLoading && (
+          <div className="full-width-section comparison-section">
+            <InlineComparison
+              selectedIds={selectedProducts}
+              onRemove={handleRemoveFromComparison}
+              onSelect={handleSelectDeviceForPurchase}
+              onClose={handleCloseComparison}
+            />
           </div>
         )}
 
-        {/* Inline Comparison - shown in chat */}
-        {conversationStep === 'comparing' && selectedProducts.length >= 2 && !isLoading && (
-          <div className="message-wrapper assistant">
-            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
-              <Bot size={20} />
-            </div>
-            <div className="message-content">
-              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
-              <div className="message-bubble assistant comparison">
-                <InlineComparison 
-                  selectedIds={selectedProducts} 
-                  onRemove={handleRemoveFromComparison}
-                  onSelect={handleSelectDeviceForPurchase}
-                  onClose={handleCloseComparison}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Inline Purchase - shown in chat */}
-        {conversationStep === 'purchasing' && purchaseProduct && !isLoading && (
-          <div className="message-wrapper assistant">
-            <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
-              <Bot size={20} />
-            </div>
-            <div className="message-content">
-              <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
-              <div className="message-bubble assistant purchase">
-                <InlinePurchase 
-                  product={purchaseProduct}
-                  onBack={handleClosePurchase}
-                  onBuy={handleFinalBuy}
-                  onUpgrade={handleUpgrade}
-                />
-              </div>
-            </div>
+        {/* Inline Purchase - full width, outside message bubble (hidden when voice popup open) */}
+        {!isVoicePopupOpen && conversationStep === 'purchasing' && purchaseProduct && !isLoading && (
+          <div className="full-width-section purchase-section">
+            <InlinePurchase
+              product={purchaseProduct}
+              onBack={handleClosePurchase}
+              onBuy={handleFinalBuy}
+              onUpgrade={handleUpgrade}
+            />
           </div>
         )}
 
@@ -1210,7 +2047,7 @@ function AIShopper({ onProductSelect }) {
                 <Send size={20} />
               </button>
             ) : (
-              <button type="button" className="icon-button mic-button" onClick={() => setIsVoicePopupOpen(true)}>
+              <button type="button" className="icon-button mic-button" onClick={handleOpenVoicePopup}>
                 <Mic size={20} />
               </button>
             )}

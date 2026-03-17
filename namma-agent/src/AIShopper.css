@@ -4,7 +4,7 @@
      height: 812px;
      background-color: #f8f9fa;
      border-radius: 40px;
-     overflow: hidden;
+     overflow: visible;
      position: relative;
      display: flex;
      flex-direction: column;
@@ -67,6 +67,28 @@
      flex: 1;
      overflow-y: auto;
      padding: 20px;
+   }
+
+   /* Full-width sections for product grid, comparison, purchase */
+   .full-width-section {
+     width: calc(100% + 40px);
+     margin-left: -20px;
+     margin-right: -20px;
+     margin-bottom: 16px;
+     background-color: #f8f7fc;
+     box-sizing: border-box;
+   }
+
+   .full-width-section.products-section {
+     padding: 16px 2px;
+   }
+
+   .full-width-section.comparison-section {
+     padding: 16px 2px;
+   }
+
+   .full-width-section.purchase-section {
+     padding: 16px 2px;
    }
 
    .messages-container::-webkit-scrollbar {
@@ -167,6 +189,27 @@
      max-width: 85%;
    }
 
+   /* Full-width content for product grids, comparison, purchase */
+   .message-wrapper.full-width {
+     margin-left: -20px;
+     margin-right: -20px;
+     width: 375px;
+   }
+
+   .message-wrapper.full-width .message-avatar {
+     display: none;
+   }
+
+   .message-wrapper.full-width .message-content {
+     max-width: 375px;
+     width: 375px;
+     padding: 0;
+   }
+
+   .message-wrapper.full-width .message-label {
+     padding-left: 16px;
+   }
+
    .message-label {
      font-size: 11px;
      font-weight: 700;
@@ -209,6 +252,15 @@
   border: 1px solid #e5e1f5;
   padding: 16px;
   max-width: 100%;
+}
+
+.message-wrapper.full-width .message-bubble.products {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  width: 375px;
+  margin-left: 0;
+  padding: 16px;
 }
 
 /* Chat Price Selection */
@@ -866,8 +918,19 @@
   max-width: 100%;
 }
 
+.message-wrapper.full-width .message-bubble.comparison {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  width: 375px;
+  margin-left: 0;
+  padding: 16px;
+}
+
 .inline-comparison {
   width: 100%;
+  padding: 0 6px;
+  box-sizing: border-box;
 }
 
 .inline-comparison-header {
@@ -1061,8 +1124,19 @@
   max-width: 100%;
 }
 
+.message-wrapper.full-width .message-bubble.purchase {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  width: 375px;
+  margin-left: 0;
+  padding: 16px;
+}
+
 .inline-purchase {
   width: 100%;
+  padding: 0 6px;
+  box-sizing: border-box;
 }
 
 .back-btn-chat {
@@ -1173,6 +1247,34 @@
   background: white;
   border: 1.5px solid #d6d3d1;
   color: #78716c;
+}
+
+.upgrade-features {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 12px;
+}
+
+.upgrade-features li {
+  font-size: 12px;
+  color: #78350f;
+  margin: 4px 0;
+  padding-left: 4px;
+}
+
+.no-results-message {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.no-results-message p {
+  font-size: 14px;
+  color: #991b1b;
+  line-height: 1.6;
+  white-space: pre-line;
 }
 
 .purchase-actions {
