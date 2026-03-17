@@ -279,4 +279,49 @@ router.get('/health', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/chat/loan
+ * Loan assistant chat endpoint
+ * Body: { messages: Array<{role, content}>, context?: Object }
+ */
+router.post('/loan', async (req, res) => {
+  try {
+    const { messages, context = {} } = req.body;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    for (const msg of messages) {
+      if (!msg.role || !msg.content) {
+        return res.status(400).json({
+          error: 'Each message must have role and content properties',
+        });
+      }
+    }
+
+    const response = await chatService.loanAssistantChat(messages, context);
+
+    if (!response.success) {
+      return res.status(500).json({
+        error: 'Failed to get loan assistant response',
+        message: response.error,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: response.message,
+      model: response.model,
+      usage: response.usage,
+    });
+  } catch (error) {
+    console.error('Loan chat endpoint error:', error);
+    res.status(500).json({
+      error: 'Failed to get loan chat response',
+      message: error.message,
+    });
+  }
+});
+
 export default router;

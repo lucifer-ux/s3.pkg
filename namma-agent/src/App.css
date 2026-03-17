@@ -1,3 +1,49 @@
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #e5e5e5;
+  padding: 20px;
+}
+
+.view-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loan-flow-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #5b4fcf 0%, #7c6fe3 100%);
+  border: none;
+  border-radius: 16px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(91, 79, 207, 0.3);
+}
+
+.loan-flow-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(91, 79, 207, 0.4);
+}
+
+.loan-flow-trigger span:first-child {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.trigger-action {
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
