@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
+import ocrRoutes from './routes/ocr.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -373,6 +374,8 @@ app.post('/api/chat/stream', async (req, res) => {
     res.end();
   }
 });
+
+app.use('/api/ocr', ocrRoutes);
 
 // Get products endpoint
 app.get('/api/products', (req, res) => {

@@ -1,7 +1,7 @@
 
 
 import { useState } from 'react';
-import { ArrowLeft, Share2, Sparkles, Crown, ArrowRight, RefreshCw, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Share2, Sparkles, Crown, ArrowRight, RefreshCw, ArrowRightLeft, Wallet } from 'lucide-react';
 import ProductComparison from './ProductComparison';
 import PaymentOptions from './PaymentOptions';
 import './ProductPurchaseScreen.css';
@@ -32,7 +32,7 @@ import './ProductPurchaseScreen.css';
      },
    };
    
-   function ProductPurchaseScreen({ onBack, onBuy }) {
+   function ProductPurchaseScreen({ onBack, onBuy, onPayViaLoan }) {
      const [currentProduct, setCurrentProduct] = useState(purchaseData.original);
      const [suggestedProduct] = useState(purchaseData.suggested);
 
@@ -40,6 +40,7 @@ import './ProductPurchaseScreen.css';
      const [showComparison, setShowComparison] = useState(false);
      const [hasSwapped, setHasSwapped] = useState(false);
      const [showPayment, setShowPayment] = useState(false);
+     const [showPaymentOptions, setShowPaymentOptions] = useState(false);
    
      const handleSwap = () => {
        setCurrentProduct(suggestedProduct);
@@ -62,7 +63,15 @@ import './ProductPurchaseScreen.css';
 
 
      const handleBuy = () => {
-       setShowPayment(true);
+       if (showPaymentOptions) {
+         setShowPayment(true);
+       } else {
+         setShowPaymentOptions(true);
+       }
+     };
+
+     const handleProceedWithLoan = () => {
+       onPayViaLoan?.(currentProduct);
      };
    
      const handleClosePayment = () => {
@@ -168,12 +177,31 @@ import './ProductPurchaseScreen.css';
              )}
            </div>
    
-           {/* Buy Button */}
            <div className="purchase-footer">
-             <button className="buy-now-btn" onClick={handleBuy}>
-               Buy Now
-               <ArrowRight size={20} />
-             </button>
+             {!showPaymentOptions ? (
+               <button className="buy-now-btn" onClick={() => setShowPaymentOptions(true)}>
+                 Buy Now
+                 <ArrowRight size={20} />
+               </button>
+             ) : (
+               <div className="payment-options">
+                 <h4 className="payment-options-title">Choose Payment Method</h4>
+                 <button className="payment-btn primary" onClick={() => setShowPayment(true)}>
+                   <span className="payment-btn-title">Pay Full Amount</span>
+                   <span className="payment-btn-amount">${currentProduct.price}.00</span>
+                 </button>
+                 <button className="payment-btn loan" onClick={handleProceedWithLoan}>
+                   <Wallet size={20} />
+                   <div className="payment-btn-content">
+                     <span className="payment-btn-title">Pay via Loan / EMI</span>
+                   </div>
+                   <ArrowRight size={18} />
+                 </button>
+                 <button className="payment-btn back" onClick={() => setShowPaymentOptions(false)}>
+                   Back
+                 </button>
+               </div>
+             )}
            </div>
          </div>
    

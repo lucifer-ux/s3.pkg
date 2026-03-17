@@ -68,7 +68,7 @@ const chatApi = {
   }
 };
 
-function AIShopper() {
+function AIShopper({ onProductSelect }) {
   const [inputValue, setInputValue] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
@@ -1020,7 +1020,8 @@ function AIShopper() {
                 <div className="message-bubble assistant products" style={{ marginTop: '8px' }}>
                   <ProductRecommendations 
                     recommendations={message.recommendations || apiRecommendations} 
-                    onCompare={handleCompare} 
+                    onCompare={handleCompare}
+                    onProductSelect={onProductSelect}
                   />
                 </div>
               )}
@@ -1139,7 +1140,10 @@ function AIShopper() {
             <div className="message-content">
               <div className="message-label" style={{ visibility: 'hidden' }}>ASSISTANT</div>
               <div className="message-bubble assistant products">
-                <ProductRecommendations onCompare={handleCompare} />
+                <ProductRecommendations 
+                  onCompare={handleCompare}
+                  onProductSelect={onProductSelect}
+                />
               </div>
             </div>
           </div>
