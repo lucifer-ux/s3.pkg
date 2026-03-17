@@ -31,8 +31,8 @@ function PANScanner({ onScanComplete, onCancel }) {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       });
       
@@ -61,13 +61,25 @@ function PANScanner({ onScanComplete, onCancel }) {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    
+    const cropSize = Math.min(videoWidth, videoHeight) * 0.7;
+    const sx = (videoWidth - cropSize) / 2;
+    const sy = (videoHeight - cropSize) / 2;
 
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    canvas.width = cropSize;
+    canvas.height = cropSize;
+
+    ctx.drawImage(
+      video,
+      sx, sy, cropSize, cropSize,
+      0, 0, cropSize, cropSize
+    );
+
+    const imageData = canvas.toDataURL('image/jpeg', 0.95);
     setCapturedImage(imageData);
     stopCamera();
   };
@@ -101,7 +113,7 @@ function PANScanner({ onScanComplete, onCancel }) {
         throw new Error(result.error || 'Failed to extract PAN details');
       }
 
-      if (!result.data.panNumber || result.data.panNumber === 'Not detected') {
+      if (!result.data.panNumber) {
         throw new Error('Could not read PAN number from image');
       }
 
@@ -151,67 +163,45 @@ function PANScanner({ onScanComplete, onCancel }) {
         <div className="pan-scanner-content">
           <div className="scanner-header">
             <h3>Enter PAN Details</h3>
-            <button className="close-btn" onClick={onCancel}>
+            <button className="close-btn" onClick={() => setShowManualEntry(false)}>
               <X size={24} />
             </button>
           </div>
 
-          <div className="scanner-body">
-            <div className="manual-entry-form">
-              <div className="manual-entry-icon">
-                <FileText size={48} />
-              </div>
-              
-              <p className="manual-entry-info">
-                We could not automatically read your PAN card. Please enter the details manually.
-              </p>
-
-              <div className="form-field">
-                <label>PAN Number</label>
-                <input
-                  type="text"
-                  placeholder="ABCDE1234F"
-                  value={manualData.panNumber}
-                  onChange={(e) => {
-                    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
-                    setManualData(prev => ({ ...prev, panNumber: value }));
-                  }}
-                  maxLength={10}
-                  className={manualData.panNumber && !isValidPAN(manualData.panNumber) ? 'error' : ''}
-                />
-                {manualData.panNumber && !isValidPAN(manualData.panNumber) && (
-                  <span className="field-error">Invalid PAN format</span>
-                )}
-              </div>
-
-              <div className="form-field">
-                <label>Full Name (as on PAN)</label>
-                <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={manualData.name}
-                  onChange={(e) => setManualData(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
+          <div className="manual-entry-body">
+            <div className="form-group">
+              <label>PAN Number</label>
+              <input
+                type="text"
+                maxLength={10}
+                placeholder="ABCDE1234F"
+                value={manualData.panNumber}
+                onChange={(e) => setManualData({ ...manualData, panNumber: e.target.value.toUpperCase() })}
+                className={manualData.panNumber && !isValidPAN(manualData.panNumber) ? 'error' : ''}
+              />
+              {manualData.panNumber && !isValidPAN(manualData.panNumber) && (
+                <span className="error-text">Invalid PAN format</span>
+              )}
             </div>
-          </div>
 
-          <div className="scanner-footer">
-            <div className="action-buttons">
-              <button className="secondary-btn" onClick={() => setShowManualEntry(false)}>
-                <RefreshCw size={16} />
-                Try Camera
-              </button>
-              
-              <button 
-                className="primary-btn"
-                onClick={handleManualSubmit}
-                disabled={!isValidPAN(manualData.panNumber) || !manualData.name.trim()}
-              >
-                Continue
-                <ArrowRight size={16} />
-              </button>
+            <div className="form-group">
+              <label>Full Name (as on PAN)</label>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                value={manualData.name}
+                onChange={(e) => setManualData({ ...manualData, name: e.target.value })}
+              />
             </div>
+
+            <button
+              className="submit-manual-btn"
+              onClick={handleManualSubmit}
+              disabled={!isValidPAN(manualData.panNumber) || !manualData.name.trim()}
+            >
+              Continue
+              <ArrowRight size={18} />
+            </button>
           </div>
         </div>
       </div>
@@ -222,141 +212,132 @@ function PANScanner({ onScanComplete, onCancel }) {
     <div className="pan-scanner-modal">
       <div className="pan-scanner-content">
         <div className="scanner-header">
-          <h3>Scan PAN Card</h3>
+          <h3>{capturedImage ? 'Review Photo' : 'Scan PAN Card'}</h3>
           <button className="close-btn" onClick={onCancel}>
             <X size={24} />
           </button>
         </div>
 
         <div className="scanner-body">
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+
           {!capturedImage ? (
-            <div className="camera-view">
+            <>
               {!hasPermission ? (
                 <div className="permission-error">
                   <Camera size={48} />
                   <p>{error || 'Camera access required'}</p>
-                  <button onClick={startCamera} className="retry-btn">
+                  <button className="retry-btn" onClick={startCamera}>
                     <RefreshCw size={16} />
-                    Retry
-                  </button>
-                  <button onClick={() => setShowManualEntry(true)} className="manual-entry-link">
-                    Enter manually instead
+                    Try Again
                   </button>
                 </div>
               ) : (
-                <>
+                <div className="camera-view">
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="camera-video"
                   />
-                  <canvas ref={canvasRef} style={{ display: 'none' }} />
                   
-                  <div className="scan-frame-overlay">
-                    <div className="scan-corners">
-                      <div className="corner top-left" />
-                      <div className="corner top-right" />
-                      <div className="corner bottom-left" />
-                      <div className="corner bottom-right" />
+                  <div className="scan-overlay">
+                    <div className="scan-frame">
+                      <div className="corner top-left"></div>
+                      <div className="corner top-right"></div>
+                      <div className="corner bottom-left"></div>
+                      <div className="corner bottom-right"></div>
                     </div>
-                    <p className="scan-instruction">
-                      Position your PAN card within the frame
-                    </p>
+                    <p className="scan-instruction">Place PAN card inside the frame</p>
                   </div>
 
                   <button className="capture-btn" onClick={captureImage}>
-                    <div className="capture-circle" />
+                    <div className="capture-circle"></div>
                   </button>
-                </>
+                </div>
               )}
-            </div>
+            </>
           ) : (
             <div className="preview-view">
-              <img src={capturedImage} alt="Captured PAN" className="captured-image" />
-              
-              {isProcessing ? (
-                <div className="processing-overlay">
-                  <Loader2 size={40} className="spinner" />
-                  <p>Extracting PAN details...</p>
-                </div>
-              ) : ocrResult ? (
-                <div className="ocr-result">
-                  <div className="result-header">
-                    <CheckCircle size={20} className="success-icon" />
-                    <span>Details Extracted</span>
-                  </div>
-                  
-                  <div className="result-fields">
-                    <div className="field">
-                      <label>PAN Number</label>
-                      <span>{ocrResult.panNumber || 'Not detected'}</span>
-                    </div>
-                    <div className="field">
-                      <label>Name</label>
-                      <span>{ocrResult.name || 'Not detected'}</span>
-                    </div>
-                    <div className="field">
-                      <label>Date of Birth</label>
-                      <span>{ocrResult.dateOfBirth || 'Not detected'}</span>
-                    </div>
+              {!ocrResult ? (
+                <>
+                  <div className="captured-image-container">
+                    <img src={capturedImage} alt="Captured PAN" className="captured-image" />
                   </div>
 
-                  <div className="confidence-badge">
-                    Confidence: {ocrResult.confidence || 'low'}
+                  {error && (
+                    <div className="error-message">
+                      <p>{error}</p>
+                      <button className="manual-entry-btn" onClick={() => setShowManualEntry(true)}>
+                        <FileText size={16} />
+                        Enter manually
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="preview-actions">
+                    <button className="action-btn secondary" onClick={retakePhoto}>
+                      <RefreshCw size={18} />
+                      Retake
+                    </button>
+                    <button
+                      className="action-btn primary"
+                      onClick={processImage}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 size={18} className="spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={18} />
+                          Use Photo
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="result-view">
+                  <div className="success-icon">
+                    <CheckCircle size={48} />
+                  </div>
+
+                  <h4>PAN Details Extracted</h4>
+
+                  <div className="result-details">
+                    <div className="result-item">
+                      <span className="label">PAN Number</span>
+                      <span className="value">{ocrResult.panNumber}</span>
+                    </div>
+                    {ocrResult.name && (
+                      <div className="result-item">
+                        <span className="label">Name</span>
+                        <span className="value">{ocrResult.name}</span>
+                      </div>
+                    )}
+                    {ocrResult.dateOfBirth && (
+                      <div className="result-item">
+                        <span className="label">Date of Birth</span>
+                        <span className="value">{ocrResult.dateOfBirth}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="result-actions">
+                    <button className="action-btn secondary" onClick={retakePhoto}>
+                      <RefreshCw size={18} />
+                      Scan Again
+                    </button>
+                    <button className="action-btn primary" onClick={handleConfirm}>
+                      <CheckCircle size={18} />
+                      Confirm
+                    </button>
                   </div>
                 </div>
-              ) : null}
-
-              {error && (
-                <div className="error-overlay">
-                  <div className="error-message">
-                    <p>{error}</p>
-                  </div>
-                  <button 
-                    className="manual-entry-btn"
-                    onClick={() => setShowManualEntry(true)}
-                  >
-                    <FileText size={16} />
-                    Enter Details Manually
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="scanner-footer">
-          {!capturedImage ? (
-            <div className="footer-actions">
-              <p className="helper-text">Make sure the card is clearly visible and well-lit</p>
-              <button onClick={() => setShowManualEntry(true)} className="manual-link">
-                Enter manually
-              </button>
-            </div>
-          ) : (
-            <div className="action-buttons">
-              <button className="secondary-btn" onClick={retakePhoto}>
-                <RefreshCw size={16} />
-                Retake
-              </button>
-              
-              {!ocrResult && !isProcessing && !error && (
-                <button className="primary-btn" onClick={processImage}>
-                  Extract Details
-                </button>
-              )}
-              
-              {ocrResult && (
-                <button className="primary-btn" onClick={handleConfirm}>
-                  Confirm & Continue
-                </button>
-              )}
-              
-              {error && !isProcessing && (
-                <button className="primary-btn" onClick={processImage}>
-                  Try Again
-                </button>
               )}
             </div>
           )}

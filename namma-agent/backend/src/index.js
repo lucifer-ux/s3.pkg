@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import ocrRoutes from './routes/ocr.js';
 import fs from 'fs';
@@ -8,7 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pollyRoutes from './routes/polly.js';
 import transcribeRoutes from './routes/transcribe.js';
-dotenv.config();
+import loanRoutes from './routes/loan.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -250,11 +252,14 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Routes
 app.use('/api/polly', pollyRoutes);
 app.use('/api/transcribe', transcribeRoutes);
+app.use('/api/ocr', ocrRoutes);
+app.use('/api/loan', loanRoutes);
 
 // Health check
 app.get('/health', (_req, res) => {

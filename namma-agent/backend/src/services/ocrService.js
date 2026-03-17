@@ -1,229 +1,310 @@
-import OpenAI from 'openai';
+import axios from 'axios';
+import FormData from 'form-data';
 
 class OCRService {
   constructor() {
-    let apiUrl = process.env.LITELLM_API_URL || 'http://localhost:4000';
-    apiUrl = apiUrl.replace(/\/$/, '');
-    if (!apiUrl.endsWith('/v1')) {
-      apiUrl = apiUrl + '/v1';
-    }
+    console.log('[OCR] Initializing OCR Service...');
+    console.log('[OCR] OCR_SPACE_API_KEY:', process.env.OCR_SPACE_API_KEY ? 'Set (hidden)' : 'NOT SET');
     
-    this.client = new OpenAI({
-      apiKey: process.env.LITELLM_API_KEY || 'sk-test',
-      baseURL: apiUrl,
-    });
-
-    this.defaultModel = process.env.LITELLM_VISION_MODEL || process.env.LITELLM_MODEL || 'gpt-4o-mini';
-    console.log('OCR Service initialized with model:', this.defaultModel);
-    console.log('API URL:', apiUrl);
+    this.apiKey = process.env.OCR_SPACE_API_KEY;
+    
+    if (!this.apiKey) {
+      console.error('[OCR] WARNING: OCR_SPACE_API_KEY not set in environment variables');
+    } else {
+      console.log('[OCR] OCR Service initialized successfully with OCR.space');
+    }
   }
 
-  /**
-   * Extract PAN card details from image using LLM vision
-   * @param {string} base64Image - Base64 encoded image
-   * @returns {Promise<Object>} - Extracted PAN details
-   */
   async extractPANDetails(base64Image) {
+    console.log('[OCR] ========== PAN EXTRACTION STARTED ==========');
+    console.log('[OCR] Received base64 image, length:', base64Image?.length || 0);
+    
+    if (!base64Image) {
+      console.error('[OCR] ERROR: No image data provided');
+      return { success: false, error: 'No image data provided', data: null };
+    }
+
+    if (!this.apiKey) {
+      console.error('[OCR] ERROR: OCR_SPACE_API_KEY not configured');
+      return { 
+        success: false, 
+        error: 'OCR service not configured. Please set OCR_SPACE_API_KEY in .env file',
+        data: null 
+      };
+    }
+
     try {
-      const systemPrompt = `You are an OCR extraction specialist. Extract information from Indian PAN (Permanent Account Number) card images.
+      console.log('[OCR] Preparing OCR.space API request...');
+      
+      const formData = new FormData();
+      formData.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
+      formData.append('apikey', this.apiKey);
+      formData.append('language', 'eng');
+      formData.append('isOverlayRequired', 'false');
+      formData.append('detectOrientation', 'true');
+      formData.append('scale', 'true');
+      formData.append('OCREngine', '2');
 
-Extract these fields:
-- panNumber: The 10-character alphanumeric PAN number (format: ABCDE1234F)
-- name: Full name as shown on the card
-- fatherName: Father's name (if visible)
-- dateOfBirth: Date of birth in DD/MM/YYYY format
-
-Respond ONLY in valid JSON format like this:
-{
-  "panNumber": "ABCDE1234F",
-  "name": "RAHUL SHARMA",
-  "fatherName": "SURESH SHARMA",
-  "dateOfBirth": "15/08/1996",
-  "confidence": "high"
-}
-
-If any field is not visible or unclear, set it to null.
-Confidence can be "high", "medium", or "low".
-
-Be strict about the PAN number format - it must be 10 characters: 5 letters, 4 numbers, 1 letter.`;
-
-      const response = await this.client.chat.completions.create({
-        model: this.defaultModel,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extract all visible information from this PAN card image. Return only valid JSON.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 1000
+      console.log('[OCR] Sending request to OCR.space API...');
+      
+      const response = await axios.post('https://api.ocr.space/parse/image', formData, {
+        headers: {
+          ...formData.getHeaders(),
+        },
+        timeout: 30000,
       });
 
-      const content = response.choices[0].message.content;
-      
-      let parsedData;
-      try {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedData = JSON.parse(jsonMatch[0]);
-        } else {
-          parsedData = JSON.parse(content);
-        }
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError, 'Content:', content);
+      console.log('[OCR] OCR.space API response received');
+      console.log('[OCR] Response status:', response.data?.OCRExitCode);
+
+      if (response.data?.IsErroredOnProcessing) {
+        console.error('[OCR] OCR.space API error:', response.data.ErrorMessage);
         return {
           success: false,
-          error: 'Failed to parse LLM response',
+          error: response.data.ErrorMessage || 'OCR processing failed',
           data: null,
-          rawContent: content
+        };
+      }
+
+      const parsedResults = response.data?.ParsedResults;
+      if (!parsedResults || parsedResults.length === 0) {
+        console.error('[OCR] No text detected in image');
+        return {
+          success: false,
+          error: 'No text detected in image',
+          data: null,
+        };
+      }
+
+      const fullText = parsedResults.map(r => r.ParsedText).join('\n');
+      console.log('[OCR] Extracted text length:', fullText.length);
+      console.log('[OCR] Raw text preview:', fullText.substring(0, 500));
+
+      console.log('[OCR] Parsing PAN card text...');
+      const extractedData = this.parsePANCardText(fullText);
+      console.log('[OCR] Parsed data:', JSON.stringify(extractedData, null, 2));
+
+      console.log('[OCR] ========== PAN EXTRACTION COMPLETED ==========');
+      return {
+        success: true,
+        data: extractedData,
+        rawText: fullText,
+        service: 'ocr.space',
+      };
+    } catch (error) {
+      console.error('[OCR] ========== PAN EXTRACTION FAILED ==========');
+      console.error('[OCR] Error name:', error.name);
+      console.error('[OCR] Error message:', error.message);
+      if (error.response) {
+        console.error('[OCR] Response status:', error.response.status);
+        console.error('[OCR] Response data:', error.response.data);
+      }
+      return {
+        success: false,
+        error: error.response?.data?.ErrorMessage || error.message,
+        data: null,
+      };
+    }
+  }
+
+  parsePANCardText(text) {
+    console.log('[OCR] Starting text parsing...');
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    console.log('[OCR] Total lines after filtering:', lines.length);
+    console.log('[OCR] All lines:', lines);
+
+    const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]{1}/;
+    const panMatch = text.match(panRegex);
+    const panNumber = panMatch ? panMatch[0] : null;
+    console.log('[OCR] PAN number found:', panNumber);
+
+    const datePatterns = [
+      /(\d{2})\/(\d{2})\/(\d{4})/,
+      /(\d{2})-(\d{2})-(\d{4})/,
+      /(\d{2})\.(\d{2})\.(\d{4})/,
+    ];
+
+    let dateOfBirth = null;
+    for (const pattern of datePatterns) {
+      const dateMatch = text.match(pattern);
+      if (dateMatch) {
+        dateOfBirth = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
+        console.log('[OCR] Date of birth found:', dateOfBirth);
+        break;
+      }
+    }
+    if (!dateOfBirth) {
+      console.log('[OCR] No date of birth found in text');
+    }
+
+    let name = null;
+    let fatherName = null;
+
+    console.log('[OCR] Scanning lines for name and father name...');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      console.log(`[OCR] Line ${i}: "${line}"`);
+
+      if (/INCOME|TAX|DEPT|GOVT|INDIA|PERMANENT|ACCOUNT|NUMBER|Signature|Date/i.test(line)) {
+        console.log(`[OCR]   -> Skipping (matched skip pattern)`);
+        continue;
+      }
+
+      const fatherMatch = line.match(/(?:S\/O|D\/O|W\/O)\s*[:\-]?\s*([A-Z][A-Z\s]+)/i);
+      if (fatherMatch && !fatherName) {
+        fatherName = fatherMatch[1].trim();
+        console.log(`[OCR]   -> Found father name: "${fatherName}"`);
+        continue;
+      }
+
+      if (/^[A-Z][A-Z\s]+$/.test(line) && line.length > 5 && line.length < 50) {
+        const words = line.split(/\s+/).filter(w => w.length > 1);
+        console.log(`[OCR]   -> Uppercase candidate, words:`, words);
+        if (words.length >= 2 && words.length <= 4) {
+          if (!name && line !== fatherName) {
+            name = line;
+            console.log(`[OCR]   -> Set as name: "${name}"`);
+          } else if (!fatherName && name && line !== name) {
+            fatherName = line;
+            console.log(`[OCR]   -> Set as father name: "${fatherName}"`);
+          }
+        }
+      }
+    }
+
+    let confidence = 'low';
+    const hasPan = !!panNumber;
+    const hasName = !!name;
+    const hasDob = !!dateOfBirth;
+
+    console.log('[OCR] Data completeness check:');
+    console.log('  - Has PAN:', hasPan);
+    console.log('  - Has Name:', hasName);
+    console.log('  - Has DOB:', hasDob);
+
+    if (hasPan && hasName && hasDob) {
+      confidence = 'high';
+    } else if ((hasPan && hasName) || (hasPan && hasDob)) {
+      confidence = 'medium';
+    }
+    console.log('[OCR] Confidence level:', confidence);
+
+    return { panNumber, name, fatherName, dateOfBirth, confidence };
+  }
+
+  async extractTextFromImage(base64Image, documentType = 'generic') {
+    console.log(`[OCR] Generic text extraction started for type: ${documentType}`);
+    
+    if (!this.apiKey) {
+      return {
+        success: false,
+        error: 'OCR_SPACE_API_KEY not configured',
+        text: null,
+      };
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('base64Image', `data:image/jpeg;base64,${base64Image}`);
+      formData.append('apikey', this.apiKey);
+      formData.append('language', 'eng');
+
+      console.log('[OCR] Sending to OCR.space API...');
+      const response = await axios.post('https://api.ocr.space/parse/image', formData, {
+        headers: formData.getHeaders(),
+        timeout: 30000,
+      });
+
+      const text = response.data?.ParsedResults?.[0]?.ParsedText || '';
+      console.log('[OCR] Extracted text length:', text.length);
+
+      if (documentType === 'pan') {
+        console.log('[OCR] Parsing as PAN document...');
+        const parsedData = this.parsePANCardText(text);
+        return {
+          success: true,
+          text,
+          parsedData,
+          documentType,
+          service: 'ocr.space',
         };
       }
 
       return {
         success: true,
-        data: {
-          panNumber: parsedData.panNumber || null,
-          name: parsedData.name || null,
-          fatherName: parsedData.fatherName || null,
-          dateOfBirth: parsedData.dateOfBirth || null,
-          confidence: parsedData.confidence || 'low'
-        },
-        model: response.model,
-        usage: response.usage
+        text,
+        documentType,
+        service: 'ocr.space',
       };
     } catch (error) {
-      console.error('PAN OCR error:', error);
+      console.error('[OCR] Text extraction failed:', error.message);
       return {
         success: false,
         error: error.message,
-        data: null
+        text: null,
       };
     }
   }
 
-  /**
-   * Extract text from any document image
-   * @param {string} base64Image - Base64 encoded image
-   * @param {string} documentType - Type of document (pan, aadhaar, etc.)
-   * @returns {Promise<Object>} - Extracted text
-   */
-  async extractTextFromImage(base64Image, documentType = 'generic') {
-    try {
-      const prompts = {
-        pan: 'Extract all text from this PAN card image. Return structured JSON with extracted fields.',
-        aadhaar: 'Extract all text from this Aadhaar card image. Return structured JSON with extracted fields.',
-        generic: 'Extract all visible text from this image. Return as plain text.'
-      };
-
-      const response = await this.client.chat.completions.create({
-        model: this.defaultModel,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: prompts[documentType] || prompts.generic
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 2000
-      });
-
-      return {
-        success: true,
-        text: response.choices[0].message.content,
-        model: response.model,
-        usage: response.usage
-      };
-    } catch (error) {
-      console.error('OCR extraction error:', error);
-      return {
-        success: false,
-        error: error.message,
-        text: null
-      };
-    }
-  }
-
-  /**
-   * Validate if image contains a valid PAN card
-   * @param {string} base64Image - Base64 encoded image
-   * @returns {Promise<Object>} - Validation result
-   */
   async validatePANCard(base64Image) {
+    console.log('[OCR] PAN validation started');
+    
     try {
-      const response = await this.client.chat.completions.create({
-        model: this.defaultModel,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a document validator. Check if the image is a valid Indian PAN card. Respond with JSON: { "isValid": boolean, "reason": string, "panNumber": string|null }'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Is this a valid Indian PAN card? Check for PAN number format (ABCDE1234F), name field, and photo. Return JSON.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 500,
-        response_format: { type: 'json_object' }
-      });
+      const result = await this.extractPANDetails(base64Image);
 
-      const result = JSON.parse(response.choices[0].message.content);
+      if (!result.success) {
+        console.log('[OCR] Validation failed - extraction unsuccessful');
+        return {
+          success: true,
+          isValid: false,
+          reason: result.error || 'Failed to extract text',
+          panNumber: null,
+        };
+      }
+
+      const { panNumber, name, dateOfBirth, confidence } = result.data;
+      
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      const isValidFormat = panRegex.test(panNumber || '');
+      
+      const isValid = isValidFormat && confidence !== 'low';
+      
+      console.log('[OCR] Validation result:');
+      console.log('  - isValidFormat:', isValidFormat);
+      console.log('  - confidence:', confidence);
+      console.log('  - Final isValid:', isValid);
 
       return {
         success: true,
-        isValid: result.isValid || false,
-        reason: result.reason || '',
-        panNumber: result.panNumber || null
+        isValid,
+        reason: isValid 
+          ? 'Valid PAN card detected' 
+          : !isValidFormat 
+            ? 'Invalid PAN number format'
+            : 'Low confidence in extracted data',
+        panNumber,
+        name,
+        dateOfBirth,
+        confidence,
       };
     } catch (error) {
-      console.error('PAN validation error:', error);
+      console.error('[OCR] Validation error:', error.message);
       return {
         success: false,
         isValid: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
 }
 
-export default new OCRService();
+let instance = null;
+
+export function getOCRService() {
+  if (!instance) {
+    instance = new OCRService();
+  }
+  return instance;
+}
+
+export default { getOCRService };
