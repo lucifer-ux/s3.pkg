@@ -215,6 +215,12 @@ function buildSystemPrompt() {
 
   return `You are Namma, an AI shopping assistant for an Indian e-commerce platform.
 
+RESPONSE STYLE - MAX 20 WORDS:
+- NEVER exceed 20 words per response
+- Count your words before responding
+- Be ultra-concise
+- Single sentence only
+
 AVAILABLE CATEGORIES:
 ${categories.map(c => `- ${c}`).join('\n')}
 
@@ -340,7 +346,7 @@ app.post('/api/chat/stream', async (req, res) => {
         ...messages
       ],
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 50,
       stream: true,
     });
 

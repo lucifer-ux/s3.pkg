@@ -10,7 +10,8 @@ function VoicePopup({
   userMessage,
   aiResponse,
   onAiFinishedSpeaking,
-  onTapToSpeak
+  onTapToSpeak,
+  autoStartListening = false
 }) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -136,61 +137,114 @@ function VoicePopup({
     if (!isOpen) {
       stopAudio();
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current.abort(); // Force abort
+        } catch {}
+        recognitionRef.current = null;
       }
       setIsListening(false);
     }
   }, [isOpen, stopAudio]);
 
+  // Cleanup on unmount (when key changes or component unmounts)
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current.abort();
+        } catch {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    };
+  }, [stopAudio]);
+
   // Start listening for user voice input
   const startListening = useCallback(() => {
-    // Stop any playing audio before listening
-    stopAudio();
+  stopAudio();
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      console.error('Speech recognition not supported');
-      return;
+  if (!SpeechRecognition) {
+    console.error('Speech recognition not supported');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  let finalTranscript = '';
+  let silenceTimer = null;
+  let hasSpoken = false;
+  let hasTriggered = false; // 🔑 prevents duplicate calls
+
+  recognition.onstart = () => {
+    setIsListening(true);
+  };
+
+  recognition.onresult = (event) => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript + ' ';
+        hasSpoken = true;
+      }
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    // Reset silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+    }
 
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        }
+    silenceTimer = setTimeout(() => {
+      if (!hasTriggered && finalTranscript.trim()) {
+        hasTriggered = true;
+        onTapToSpeak(finalTranscript.trim());
+        recognition.stop();
       }
+    }, 1500);
+  };
 
-      if (finalTranscript) {
-        onTapToSpeak(finalTranscript);
-        setIsListening(false);
-      }
-    };
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    setIsListening(false);
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-    };
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+    }
+  };
 
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+  recognition.onend = () => {
+    setIsListening(false);
 
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, [onTapToSpeak, stopAudio]);
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+    }
+
+    // ✅ Safe fallback (only if not already triggered)
+    if (!hasTriggered && hasSpoken && finalTranscript.trim()) {
+      hasTriggered = true;
+      onTapToSpeak(finalTranscript.trim());
+    }
+  };
+
+  recognitionRef.current = recognition;
+  recognition.start();
+}, [onTapToSpeak, stopAudio]);
+
+  // Auto-start listening when popup opens
+  useEffect(() => {
+    if (isOpen && autoStartListening && !isListening && !isSpeaking && !aiResponse) {
+      startListening();
+    }
+  }, [isOpen, autoStartListening, isListening, isSpeaking, aiResponse, startListening]);
 
   // Audio visualization while listening
   useEffect(() => {

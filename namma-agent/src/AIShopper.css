@@ -1363,6 +1363,44 @@
      background-color: #ffffff;
      color: #9ca3af;
      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+     transition: all 0.2s ease;
+   }
+
+   .mic-button.listening {
+     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+     color: white;
+     box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+     animation: pulse-listening 1.5s ease-in-out infinite;
+   }
+
+   .mic-button.speaking {
+     background: linear-gradient(135deg, #5b4fcf 0%, #7c3aed 100%);
+     color: white;
+     box-shadow: 0 2px 12px rgba(91, 79, 207, 0.4);
+   }
+
+   @keyframes pulse-listening {
+     0%, 100% {
+       transform: scale(1);
+     }
+     50% {
+       transform: scale(1.05);
+     }
+   }
+
+   .voice-waveform {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 2px;
+     height: 20px;
+   }
+
+   .voice-waveform-bar {
+     width: 3px;
+     background-color: white;
+     border-radius: 2px;
+     transition: height 0.1s ease;
    }
 
    /* Inline Payment Options */

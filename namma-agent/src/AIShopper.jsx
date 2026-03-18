@@ -1,8 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot, X, ChevronLeft, Check } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { QrCode, Mic, Send, Camera, Battery, Gamepad2, Signal, Bot, X, ChevronLeft, Check, Volume2 } from 'lucide-react';
 import QRScannerModal from './QRScannerModal';
-import VoiceInputModal from './VoiceInputModal';
-import VoicePopup from './VoicePopup';
 import ProductRecommendations from './ProductRecommendations';
 import PaymentOptions from './PaymentOptions';
 import './AIShopper.css';
@@ -443,10 +441,21 @@ const formatPrice = (price, currency = 'INR') => {
   const symbol = currency === 'INR' ? '₹' : '$';
   return `${symbol}${price.toLocaleString('en-IN')}`;
 };
+// Conversation flow steps
+const CONVERSATION_STEPS = [
+  'initial',           // Welcome, understand what user wants
+  'category',          // Determine product category (phones, laptops, etc.)
+  'budget_range',      // Understand budget constraints
+  'features',          // Identify important features/priorities
+  'recommendations',   // Show product recommendations
+  'comparison',        // Compare selected products
+  'payment_options'    // Show payment/EMI options
+];
 
 // API client for chat
 const chatApi = {
   async sendMessage(messages) {
+    console.log("Sending messages to API:", messages);
     const response = await fetch(`${API_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -456,11 +465,16 @@ const chatApi = {
     return response.json();
   },
 
-  async *streamMessage(messages) {
+  async *streamMessage(messages, conversationStep = 'initial') {
+    console.log("Streaming messages to API:", messages, "Step:", conversationStep);
     const response = await fetch(`${API_URL}/api/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        conversationStep,
+        availableSteps: CONVERSATION_STEPS
+      }),
     });
 
     const reader = response.body.getReader();
@@ -479,8 +493,8 @@ const chatApi = {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
           if (data === '[DONE]') {
-            // Yield final result with recommendations
-            yield { done: true, content: fullContent, recommendations };
+            // Yield final result with recommendations (content already streamed)
+            yield { done: true, recommendations };
             return;
           }
           try {
@@ -491,7 +505,11 @@ const chatApi = {
             }
             if (parsed.done) {
               recommendations = parsed.recommendations;
-              fullContent = parsed.fullContent || fullContent;
+              // Don't use parsed.fullContent - we already accumulated all chunks
+            }
+            // Include nextStep if provided by AI
+            if (parsed.nextStep) {
+              yield { nextStep: parsed.nextStep };
             }
           } catch (e) {
             // ignore parse errors
@@ -503,22 +521,53 @@ const chatApi = {
 };
 
 function AIShopper({ onProductSelect }) {
+  // Unique ID counter to prevent duplicate keys
+  const idCounterRef = useRef(0);
+  const generateId = () => {
+    idCounterRef.current += 1;
+    return `${Date.now()}-${idCounterRef.current}`;
+  };
+
   const [inputValue, setInputValue] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
-  const [isVoiceInputOpen, setIsVoiceInputOpen] = useState(false);
-  const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
-  const [voiceUserMessage, setVoiceUserMessage] = useState('');
-  const [voiceAiResponse, setVoiceAiResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationStep, setConversationStep] = useState('initial'); // 'initial' -> 'awaiting_device_type' -> 'awaiting_price' -> 'awaiting_features' -> 'showing_products' -> 'comparing' -> 'purchasing'
-  const [awaitingResponse, setAwaitingResponse] = useState(null); // 'device_type', 'price_range', etc.
+  const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
+  const [voiceAiResponse, setVoiceAiResponse] = useState('');
+  // Load conversation step from localStorage
   const [isVoiceMode, setIsVoiceMode] = useState(false); // Track if user is in voice conversation mode
-  const [selectedPrice, setSelectedPrice] = useState(null);
+  const [awaitingResponse, setAwaitingResponse] = useState(null); // 'device_type', 'price_range', etc.
   const [selectedFeatures, setSelectedFeatures] = useState([]);
   const [cartCount] = useState(2);
+  const [conversationStep, setConversationStep] = useState(() => {
+    const saved = localStorage.getItem('conversationStep');
+    return saved || 'initial';
+  });
+  const [selectedPrice, setSelectedPrice] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [purchaseProduct, setPurchaseProduct] = useState(null);
+  const [isEarphoneEnabled, setIsEarphoneEnabled] = useState(false);
+
+  // Inline voice states - replaces VoicePopup
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  const [voiceAudioLevels, setVoiceAudioLevels] = useState(new Array(5).fill(0));
+
+  const audioRef = useRef(null);
+  const lastDoubleTapRef = useRef(0);
+
+  // Voice refs
+  const voiceAudioRef = useRef(null);
+  const voiceAudioContextRef = useRef(null);
+  const voiceAnalyserRef = useRef(null);
+  const voiceAnimationFrameRef = useRef(null);
+  const voiceRecognitionRef = useRef(null);
+  const lastSpokenResponseRef = useRef('');
+  const isVoiceListeningRef = useRef(isVoiceListening);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isVoiceListeningRef.current = isVoiceListening;
+  }, [isVoiceListening]);
 
   // Filtered product recommendations based on user requirements
   const [filteredRecommendations, setFilteredRecommendations] = useState([]);
@@ -560,15 +609,123 @@ function AIShopper({ onProductSelect }) {
   });
 
   const messagesEndRef = useRef(null);
+  const messagesRef = useRef(messages);
+
+  // Keep messagesRef in sync with state
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Earphone controls setup
+  const enableEarphoneControls = async () => {
+    try {
+      const audio = new Audio('/silent.mp3');
+      audio.loop = true;
+
+      // IMPORTANT: macOS ignores near-zero volume
+      audio.volume = 0.2;
+
+      await audio.play();
+
+      audioRef.current = audio;
+      setIsEarphoneEnabled(true);
+
+      setupMediaSession();
+
+    } catch (err) {
+      console.error('Failed to start audio:', err);
+    }
+  };
+
+  const setupMediaSession = () => {
+    if (!('mediaSession' in navigator)) {
+      console.warn('Media Session API NOT supported');
+      return;
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'AI Shopper',
+      artist: 'ShopAI',
+    });
+
+    navigator.mediaSession.playbackState = 'playing';
+
+    try {
+      navigator.mediaSession.setActionHandler('play', () => {
+        console.log('Earphone single tap detected');
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        console.log('Earphone pause detected');
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        const now = Date.now();
+        const timeSinceLastTap = now - lastDoubleTapRef.current;
+
+        // Debounce: ignore if less than 500ms since last tap
+        if (timeSinceLastTap < 500) {
+          return;
+        }
+        lastDoubleTapRef.current = now;
+
+        console.log('Earphone double tap detected - toggling voice listening');
+        // Toggle voice listening
+        if (isVoiceListeningRef.current) {
+          stopVoiceListening();
+        } else {
+          startVoiceListening();
+        }
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        console.log('Earphone triple tap detected');
+      });
+    } catch (e) {
+      console.warn('Media action not supported:', e);
+    }
+  };
+
+  // Auto-recover audio if browser pauses it
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState === 'visible' && audioRef.current) {
+        try {
+          await audioRef.current.play();
+        } catch {}
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
+  }, []);
+
+  // Keep forcing audio alive (macOS workaround)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Save messages to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
+
+  // Save conversation step to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('conversationStep', conversationStep);
+  }, [conversationStep]);
 
   // Save apiRecommendations to localStorage whenever they change
   useEffect(() => {
@@ -615,8 +772,202 @@ function AIShopper({ onProductSelect }) {
     const messageText = text || inputValue.trim();
     if (!messageText) return;
 
+    const lowerText = messageText.trim().toLowerCase();
+
+    // Check if user wants to select/buy a specific product (must have product name with at least 2 words or a model number)
+    const selectMatch = lowerText.match(/^(?:select|choose)\s+(?:this|the)?\s*(.+)$/i);
+    if (selectMatch && apiRecommendations.length > 0) {
+      const productName = selectMatch[1].trim().toLowerCase();
+
+      // Require at least 2 words OR a model number (digits) to avoid matching generic phrases like "this one"
+      const hasModelNumber = /\d/.test(productName);
+      const wordCount = productName.split(/\s+/).length;
+      if (wordCount < 2 && !hasModelNumber) {
+        console.log('Select match rejected - too generic:', productName);
+      } else {
+      console.log('Select match:', productName, 'words:', wordCount, 'hasNumber:', hasModelNumber);
+
+      // Find best matching product
+      let bestMatch = null;
+      let bestScore = 0;
+
+      for (const product of apiRecommendations) {
+        const productNameLower = (product.name || '').toLowerCase();
+        const searchWords = productName.split(/\s+/).filter(w => w.length > 1);
+
+        let score = 0;
+        if (productNameLower === productName) {
+          score = 1000;
+        } else if (productNameLower.includes(productName)) {
+          score = 500 + productName.length;
+        } else if (productName.includes(productNameLower)) {
+          score = 300 + productNameLower.length;
+        } else {
+          for (const word of searchWords) {
+            if (productNameLower.includes(word)) {
+              score += 50;
+              if (/\d/.test(word)) score += 100;
+            }
+          }
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = product;
+        }
+      }
+
+      console.log('Best select match:', bestMatch, 'score:', bestScore);
+
+      if (bestMatch && bestScore > 50) {
+        // Add user message
+        const userMessage = {
+          id: generateId(),
+          text: messageText,
+          sender: 'user',
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        setInputValue('');
+
+        // Trigger purchase flow
+        // Look up full product details from productsData
+        const fullProduct = productsData.find(p => p.product_id === bestMatch.product_id);
+        console.log(fullProduct);
+        if (fullProduct) {
+          console.log({
+            id: fullProduct.product_id,
+            name: fullProduct.name,
+            shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
+            image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
+            price: fullProduct.skus?.[0]?.price?.selling_price || 0,
+            priceDisplay: fullProduct.skus?.[0]?.price
+              ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
+              : '',
+            specs: {
+              battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
+              display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
+              camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
+              ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
+              processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+            },
+          });
+          handleSelectDeviceForPurchase({
+            id: fullProduct.product_id,
+            name: fullProduct.name,
+            shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
+            image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
+            price: fullProduct.skus?.[0]?.price?.selling_price || 0,
+            priceDisplay: fullProduct.skus?.[0]?.price
+              ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
+              : '',
+            specs: {
+              battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
+              display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
+              camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
+              ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
+              processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+            },
+          });
+        } else {
+          // Fallback to api data with N/A specs
+          handleSelectDeviceForPurchase({
+            id: bestMatch.prid,
+            name: bestMatch.name,
+            shortName: bestMatch.name?.split(' ').slice(0, 3).join(' ') || bestMatch.name,
+            image: bestMatch.image || '/placeholder.png',
+            price: bestMatch.numericPrice || 0,
+            priceDisplay: bestMatch.price || '',
+            specs: {
+              battery: { value: 'N/A', score: 50 },
+              display: { value: 'N/A', score: 70 },
+              camera: { value: 'N/A', score: 70 },
+              ram: { value: 'N/A', score: 60 },
+              processor: { value: 'N/A', score: 80 },
+            }
+          });
+        }
+        return;
+      }
+      }
+    }
+
+    // Check if user wants to compare products (handles "compare" or "campare" typo)
+    const compareMatch = lowerText.match(/^(?:compare|campare)\s+(.+?)\s+(?:and|vs\.?|with)\s+(.+)$/i);
+    console.log('Compare match:', compareMatch, 'messageText:', JSON.stringify(messageText), 'lowerText:', lowerText, 'apiRecommendations:', apiRecommendations.length);
+    if (compareMatch && apiRecommendations.length >= 2) {
+      const product1Name = compareMatch[1].trim().toLowerCase();
+      const product2Name = compareMatch[2].trim().toLowerCase();
+      console.log('Searching for:', product1Name, 'and', product2Name);
+      console.log('Available products:', apiRecommendations.map(p => p.name));
+
+      // Find best matching products using scoring
+      const findBestMatch = (searchName) => {
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const product of apiRecommendations) {
+          const productName = (product.name || product.shortName || '').toLowerCase();
+          const searchWords = searchName.split(/\s+/).filter(w => w.length > 1);
+          const productWords = productName.split(/\s+/).filter(w => w.length > 1);
+
+          let score = 0;
+          // Exact match gets highest score
+          if (productName === searchName) {
+            score = 1000;
+          } else if (productName.includes(searchName)) {
+            // Product contains full search term
+            score = 500 + searchName.length;
+          } else if (searchName.includes(productName)) {
+            // Search contains full product name
+            score = 300 + productName.length;
+          } else {
+            // Count matching words
+            for (const word of searchWords) {
+              if (productWords.some(pw => pw.includes(word) || word.includes(pw))) {
+                score += 50;
+                // Bonus for matching model numbers (contain digits)
+                if (/\d/.test(word)) score += 100;
+              }
+            }
+          }
+
+          console.log(`  Score for "${productName}": ${score}`);
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = product;
+          }
+        }
+
+        console.log(`Best match for "${searchName}":`, bestMatch?.name, 'score:', bestScore);
+        return bestMatch;
+      };
+
+      const match1 = findBestMatch(product1Name);
+      const match2 = findBestMatch(product2Name);
+
+      console.log('Final matches:', match1?.name, 'vs', match2?.name);
+
+      if (match1 && match2 && match1.id !== match2.id) {
+        // Add user message
+        const userMessage = {
+          id: generateId(),
+          text: messageText,
+          sender: 'user',
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        setInputValue('');
+
+        // Trigger comparison with correct product IDs
+        handleCompare([match1.id, match2.id]);
+        return;
+      }
+    }
+
     const userMessage = {
-      id: Date.now(),
+      id: generateId(),
       text: messageText,
       sender: 'user',
       timestamp: new Date().toISOString(),
@@ -626,7 +977,7 @@ function AIShopper({ onProductSelect }) {
     setInputValue('');
 
     // Check if this is the first user message (excluding welcome)
-    const userMessageCount = messages.filter(m => m.sender === 'user').length;
+    const userMessageCount = messagesRef.current.filter(m => m.sender === 'user').length;
     const isFirstMessage = userMessageCount === 0;
 
     // Parse first message for smart flow
@@ -773,16 +1124,15 @@ function AIShopper({ onProductSelect }) {
         content: messageText
       });
 
-      // Add instruction to ask one question at a time if this is the first message
-      if (apiMessages.length <= 1) {
-        apiMessages.unshift({
-          role: 'system',
-          content: 'This is the start of the conversation. Ask only ONE question: What category are you looking for (phones, laptops, etc.)? Do NOT ask multiple questions.'
-        });
-      }
+      // Add system instruction with conversation flow context
+      const availableStepsStr = CONVERSATION_STEPS.join(', ');
+      apiMessages.unshift({
+        role: 'system',
+        content: `You are an AI shopping assistant. Follow this conversation flow: ${availableStepsStr}. Current step: ${conversationStep}. Respond with JSON format: {"message": "your response text", "nextStep": "one of the available steps"}. Keep responses brief (1-2 sentences). Be concise and to the point. Only ask clarifying questions when truly needed.`
+      });
 
       // Create a placeholder for the streaming response
-      const aiMessageId = Date.now() + 1;
+      const aiMessageId = generateId();
       setMessages((prev) => [...prev, {
         id: aiMessageId,
         text: '',
@@ -790,24 +1140,63 @@ function AIShopper({ onProductSelect }) {
         timestamp: new Date().toISOString(),
       }]);
 
-      // Stream the response
-      let fullText = '';
+      // Stream the response - pass current conversation step to API
+      let fullResponse = '';
       let recommendations = null;
-      for await (const chunk of chatApi.streamMessage(apiMessages)) {
-        if (chunk.content) {
-          fullText += chunk.content;
-          setMessages((prev) =>
-            prev.map(m =>
-              m.id === aiMessageId
-                ? { ...m, text: fullText }
-                : m
-            )
-          );
-        }
+      let nextStep = null;
+
+      for await (const chunk of chatApi.streamMessage(apiMessages, conversationStep)) {
         if (chunk.done) {
+          // Final chunk - only capture recommendations, content already streamed
           recommendations = chunk.recommendations;
-          fullText = chunk.content || fullText;
+        } else if (chunk.content) {
+          // Streaming chunk - accumulate content
+          fullResponse += chunk.content;
         }
+        if (chunk.nextStep) {
+          nextStep = chunk.nextStep;
+        }
+
+        // Parse and display immediately for streaming effect
+        let displayText = fullResponse;
+        try {
+          // Clean up markdown code blocks (handle multiline) and parse JSON
+          const cleaned = fullResponse
+            .replace(/^```json\s*/m, '')
+            .replace(/\s*```$/m, '')
+            .trim();
+          const parsed = JSON.parse(cleaned);
+          displayText = parsed.message || fullResponse;
+          if (parsed.nextStep) {
+            nextStep = parsed.nextStep;
+          }
+        } catch {
+          // Not valid JSON yet, show as-is
+        }
+
+        setMessages((prev) =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, text: displayText }
+              : m
+          )
+        );
+      }
+
+      // Final parse to get clean message
+      let finalMessageText = fullResponse;
+      try {
+        const cleaned = fullResponse
+          .replace(/^```json\s*/m, '')
+          .replace(/\s*```$/m, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        finalMessageText = parsed.message || fullResponse;
+        if (parsed.nextStep && !nextStep) {
+          nextStep = parsed.nextStep;
+        }
+      } catch {
+        // If not valid JSON, use as-is
       }
 
       // Update final message with recommendations if any
@@ -816,21 +1205,23 @@ function AIShopper({ onProductSelect }) {
         setMessages((prev) =>
           prev.map(m =>
             m.id === aiMessageId
-              ? { ...m, text: fullText, showProducts: true, recommendations }
+              ? { ...m, text: finalMessageText, showProducts: true, recommendations }
               : m
           )
         );
       }
 
-      // After first AI response about phones, show device type tiles
-      const lowerText = messageText.toLowerCase();
-      if ((lowerText.includes('phone') || lowerText.includes('mobile')) && conversationStep === 'initial') {
-        setAwaitingResponse('device_type');
+      // Update conversation step based on AI response
+      // Only update if different and valid, and advance to recommendations if products shown
+      if (recommendations && recommendations.length > 0) {
+        setConversationStep('recommendations');
+      } else if (nextStep && nextStep !== conversationStep && CONVERSATION_STEPS.includes(nextStep)) {
+        setConversationStep(nextStep);
       }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [...prev, {
-        id: Date.now() + 1,
+        id: generateId(),
         text: 'Sorry, I had trouble connecting. Please try again.',
         sender: 'assistant',
         timestamp: new Date().toISOString(),
@@ -849,32 +1240,37 @@ function AIShopper({ onProductSelect }) {
     // Add user selection message
     const selectionText = `I'm looking for a ${deviceType.label}`;
     const selectionMessage = {
-      id: Date.now(),
+      id: generateId(),
       text: selectionText,
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
-    // Set awaitingResponse to show price tiles - NO AI message, just tiles
+    setConversationStep('budget_range');
     setAwaitingResponse('price_range');
-    setConversationStep('awaiting_price');
+
+    // Send to AI
+    sendToAI(selectionText);
   };
 
   const handlePriceSelect = (priceRange) => {
     // Add user selection message
     const selectionText = `My budget is ${priceRange.label}`;
     const selectionMessage = {
-      id: Date.now(),
+      id: generateId(),
       text: selectionText,
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
     setSelectedPrice(priceRange);
-    setConversationStep('awaiting_features');
     // Clear awaitingResponse to hide price tiles
     setAwaitingResponse(null);
     // NO AI message - just show feature tiles directly
+    setConversationStep('features');
+
+    // Send to AI
+    sendToAI(selectionText);
   };
 
   const handleFeatureSelect = (feature) => {
@@ -884,7 +1280,7 @@ function AIShopper({ onProductSelect }) {
     // Add user selection message
     const selectionText = `I prioritize ${feature.label}`;
     const selectionMessage = {
-      id: Date.now(),
+      id: generateId(),
       text: selectionText,
       sender: 'user',
       timestamp: new Date().toISOString(),
@@ -1036,7 +1432,7 @@ function AIShopper({ onProductSelect }) {
       });
 
       // Create AI response placeholder
-      const aiMessageId = Date.now() + 1;
+      const aiMessageId = generateId();
       setMessages((prev) => [...prev, {
         id: aiMessageId,
         text: '',
@@ -1072,7 +1468,7 @@ function AIShopper({ onProductSelect }) {
     setConversationStep('comparing');
     // Add comparison message to chat
     setMessages((prev) => [...prev, {
-      id: Date.now(),
+      id: generateId(),
       text: `Comparing ${selectedIds.length} phones side by side. Tap on a device to select it for purchase.`,
       sender: 'assistant',
       timestamp: new Date().toISOString(),
@@ -1084,7 +1480,7 @@ function AIShopper({ onProductSelect }) {
     setConversationStep('purchasing');
     // Add purchase message to chat
     setMessages((prev) => [...prev, {
-      id: Date.now(),
+      id: generateId(),
       text: `Great choice! The ${product.name} is an excellent pick. Here are the payment options:`,
       sender: 'assistant',
       timestamp: new Date().toISOString(),
@@ -1122,7 +1518,7 @@ function AIShopper({ onProductSelect }) {
     setPurchaseProduct(null);
     setSelectedProducts([]);
     setMessages((prev) => [...prev, {
-      id: Date.now(),
+      id: generateId(),
       text: `Congratulations! Your order for ${product.name}${offerText} has been placed successfully. Is there anything else I can help you with?`,
       sender: 'assistant',
       timestamp: new Date().toISOString(),
@@ -1136,15 +1532,20 @@ function AIShopper({ onProductSelect }) {
       id: proVariant.product_id,
       name: proVariant.name,
       shortName: proVariant.name.split(' ').slice(0, 3).join(' '),
-      image: proVariant.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+      // image: proVariant.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+      image: proVariant.images?.[0] || '/placeholder.png',
       price: variantPrice,
       priceDisplay: formatPrice(variantPrice, proVariant.skus?.[0]?.price?.currency),
+      // price: proVariant.skus?.[0]?.price?.selling_price || 0,
+      // priceDisplay: proVariant.skus?.[0]?.price
+      //   ? `${proVariant.skus[0].price.currency === 'INR' ? '₹' : '$'}${proVariant.skus[0].price.selling_price?.toLocaleString()}`
+      //   : '',
     };
 
     setPurchaseProduct(upgradedProduct);
     // Add upgrade message to chat
     setMessages((prev) => [...prev, {
-      id: Date.now(),
+      id: generateId(),
       text: `Great choice upgrading to ${proVariant.name}! This model has better features. Here are the payment options:`,
       sender: 'assistant',
       timestamp: new Date().toISOString(),
@@ -1165,28 +1566,13 @@ function AIShopper({ onProductSelect }) {
     handleSendMessage(`Scanned product: ${decodedText}`);
   };
 
-  const handleOpenVoiceInput = () => {
-    setIsVoiceInputOpen(true);
-  };
-
-  const handleCloseVoiceInput = () => {
-    setIsVoiceInputOpen(false);
-  };
-
-  const handleVoiceTranscriptComplete = (transcript) => {
-    handleSendMessage(transcript);
-  };
-
-  // Handle voice mode - show popup and send message
+  // Handle voice mode - send message and auto-read response
   const handleVoiceMode = async (transcript) => {
     if (!transcript.trim()) return;
 
-    // Set user message for popup
-    setVoiceUserMessage(transcript);
-
     // Send message in background (same as regular chat)
     const userMessage = {
-      id: Date.now(),
+      id: generateId(),
       text: transcript,
       sender: 'user',
       timestamp: new Date().toISOString(),
@@ -1194,8 +1580,143 @@ function AIShopper({ onProductSelect }) {
 
     setMessages((prev) => [...prev, userMessage]);
 
+    const lowerText = transcript.trim().toLowerCase();
+
+    // Check if user wants to select/buy a specific product via voice
+    const selectMatch = lowerText.match(/^(?:select|choose)\s+(?:this|the)?\s*(.+)$/i);
+    if (selectMatch && apiRecommendations.length > 0) {
+      const productName = selectMatch[1].trim().toLowerCase();
+
+      // Require at least 2 words OR a model number to avoid generic phrases
+      const hasModelNumber = /\d/.test(productName);
+      const wordCount = productName.split(/\s+/).length;
+      if (wordCount >= 2 || hasModelNumber) {
+        console.log('Voice select match:', productName, 'words:', wordCount, 'hasNumber:', hasModelNumber);
+
+        // Find best matching product
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const product of apiRecommendations) {
+          const productNameLower = (product.name || '').toLowerCase();
+          const searchWords = productName.split(/\s+/).filter(w => w.length > 1);
+
+          let score = 0;
+          if (productNameLower === productName) {
+            score = 1000;
+          } else if (productNameLower.includes(productName)) {
+            score = 500 + productName.length;
+          } else if (productName.includes(productNameLower)) {
+            score = 300 + productNameLower.length;
+          } else {
+            for (const word of searchWords) {
+              if (productNameLower.includes(word)) {
+                score += 50;
+                if (/\d/.test(word)) score += 100;
+              }
+            }
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = product;
+          }
+        }
+
+        if (bestMatch && bestScore > 50) {
+          // Trigger purchase flow
+          const fullProduct = productsData.find(p => p.product_id === bestMatch.product_id);
+          if (fullProduct) {
+            handleSelectDeviceForPurchase({
+              id: fullProduct.product_id,
+              name: fullProduct.name,
+              shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
+              image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
+              price: fullProduct.skus?.[0]?.price?.selling_price || 0,
+              priceDisplay: fullProduct.skus?.[0]?.price
+                ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
+                : '',
+              specs: {
+                battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
+                display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
+                camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
+                ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
+                processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+              },
+            });
+          } else {
+            handleSelectDeviceForPurchase({
+              id: bestMatch.prid,
+              name: bestMatch.name,
+              shortName: bestMatch.name?.split(' ').slice(0, 3).join(' ') || bestMatch.name,
+              image: bestMatch.image || '/placeholder.png',
+              price: bestMatch.numericPrice || 0,
+              priceDisplay: bestMatch.price || '',
+              specs: {
+                battery: { value: 'N/A', score: 50 },
+                display: { value: 'N/A', score: 70 },
+                camera: { value: 'N/A', score: 70 },
+                ram: { value: 'N/A', score: 60 },
+                processor: { value: 'N/A', score: 80 },
+              }
+            });
+          }
+          return;
+        }
+      }
+    }
+
+    // Check if user wants to compare products via voice
+    const compareMatch = lowerText.match(/^(?:compare|campare)\s+(.+?)\s+(?:and|vs\.?|with)\s+(.+)$/i);
+    if (compareMatch && apiRecommendations.length >= 2) {
+      const product1Name = compareMatch[1].trim().toLowerCase();
+      const product2Name = compareMatch[2].trim().toLowerCase();
+
+      // Find best matching products
+      const findBestMatch = (searchName) => {
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const product of apiRecommendations) {
+          const productName = (product.name || product.shortName || '').toLowerCase();
+          const searchWords = searchName.split(/\s+/).filter(w => w.length > 1);
+          const productWords = productName.split(/\s+/).filter(w => w.length > 1);
+
+          let score = 0;
+          if (productName === searchName) {
+            score = 1000;
+          } else if (productName.includes(searchName)) {
+            score = 500 + searchName.length;
+          } else if (searchName.includes(productName)) {
+            score = 300 + productName.length;
+          } else {
+            for (const word of searchWords) {
+              if (productWords.some(pw => pw.includes(word) || word.includes(pw))) {
+                score += 50;
+                if (/\d/.test(word)) score += 100;
+              }
+            }
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = product;
+          }
+        }
+        return bestMatch;
+      };
+
+      const match1 = findBestMatch(product1Name);
+      const match2 = findBestMatch(product2Name);
+
+      if (match1 && match2 && match1.id !== match2.id) {
+        handleCompare([match1.id, match2.id]);
+        return;
+      }
+    }
+
     // Check if this is the first user message (excluding welcome)
-    const userMessageCount = messages.filter(m => m.sender === 'user').length;
+    const userMessageCount = messagesRef.current.filter(m => m.sender === 'user').length;
     const isFirstMessage = userMessageCount === 0;
 
     // Parse first message for smart flow
@@ -1322,21 +1843,29 @@ function AIShopper({ onProductSelect }) {
     setIsLoading(true);
 
     try {
-      // Build message history for API
-      const apiMessages = messages
-        .filter(m => m.sender === 'user' || m.sender === 'assistant')
+      // Build message history for API - use messagesRef to avoid stale closure
+      const apiMessages = messagesRef.current
+        .filter(m => (m.sender === 'user' || m.sender === 'assistant') && !m.isWelcome)
         .map(m => ({
           role: m.sender,
           content: m.text
         }));
 
+      // Add the new user message
       apiMessages.push({
         role: 'user',
         content: transcript
       });
 
+      // Add system instruction with conversation flow context
+      const availableStepsStr = CONVERSATION_STEPS.join(', ');
+      apiMessages.unshift({
+        role: 'system',
+        content: `You are an AI shopping assistant. Follow this conversation flow: ${availableStepsStr}. Current step: ${conversationStep}. Respond with JSON format: {"message": "your response text", "nextStep": "one of the available steps"}. Keep responses brief (1-2 sentences). Be concise and to the point. Only ask clarifying questions when truly needed.`
+      });
+
       // Create a placeholder for the streaming response
-      const aiMessageId = Date.now() + 1;
+      const aiMessageId = generateId();
       setMessages((prev) => [...prev, {
         id: aiMessageId,
         text: '',
@@ -1344,24 +1873,63 @@ function AIShopper({ onProductSelect }) {
         timestamp: new Date().toISOString(),
       }]);
 
-      // Stream the response
-      let fullText = '';
+      // Stream the response - pass current conversation step to API
+      let fullResponse = '';
       let recommendations = null;
-      for await (const chunk of chatApi.streamMessage(apiMessages)) {
-        if (chunk.content) {
-          fullText += chunk.content;
-          setMessages((prev) =>
-            prev.map(m =>
-              m.id === aiMessageId
-                ? { ...m, text: fullText }
-                : m
-            )
-          );
-        }
+      let nextStep = null;
+
+      for await (const chunk of chatApi.streamMessage(apiMessages, conversationStep)) {
         if (chunk.done) {
-          fullText = chunk.content || fullText;
+          // Final chunk - only capture recommendations, content already streamed
           recommendations = chunk.recommendations;
+        } else if (chunk.content) {
+          // Streaming chunk - accumulate content
+          fullResponse += chunk.content;
         }
+        if (chunk.nextStep) {
+          nextStep = chunk.nextStep;
+        }
+
+        // Parse and display immediately for streaming effect
+        let displayText = fullResponse;
+        try {
+          // Clean up markdown code blocks (handle multiline) and parse JSON
+          const cleaned = fullResponse
+            .replace(/^```json\s*/m, '')
+            .replace(/\s*```$/m, '')
+            .trim();
+          const parsed = JSON.parse(cleaned);
+          displayText = parsed.message || fullResponse;
+          if (parsed.nextStep) {
+            nextStep = parsed.nextStep;
+          }
+        } catch {
+          // Not valid JSON yet, show as-is
+        }
+
+        setMessages((prev) =>
+          prev.map(m =>
+            m.id === aiMessageId
+              ? { ...m, text: displayText }
+              : m
+          )
+        );
+      }
+
+      // Final parse to get clean message
+      let finalMessageText = fullResponse;
+      try {
+        const cleaned = fullResponse
+          .replace(/^```json\s*/m, '')
+          .replace(/\s*```$/m, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        finalMessageText = parsed.message || fullResponse;
+        if (parsed.nextStep && !nextStep) {
+          nextStep = parsed.nextStep;
+        }
+      } catch {
+        // If not valid JSON, use as-is
       }
 
       // Update final message with recommendations if any
@@ -1370,87 +1938,280 @@ function AIShopper({ onProductSelect }) {
         setMessages((prev) =>
           prev.map(m =>
             m.id === aiMessageId
-              ? { ...m, text: fullText, showProducts: true, recommendations }
+              ? { ...m, text: finalMessageText, showProducts: true, recommendations }
               : m
           )
         );
       }
 
-      // Set AI response for voice popup (will trigger TTS)
-      setVoiceAiResponse(fullText);
+      // Update conversation step based on AI response
+      // Only update if different and valid, and advance to recommendations if products shown
+      if (recommendations && recommendations.length > 0) {
+        setConversationStep('recommendations');
+      } else if (nextStep && nextStep !== conversationStep && CONVERSATION_STEPS.includes(nextStep)) {
+        setConversationStep(nextStep);
+      }
+
+      // Auto-read the AI response (use clean message text)
+      speakAiResponse(finalMessageText);
     } catch (error) {
       console.error('Voice chat error:', error);
       const errorMessage = 'Sorry, I had trouble connecting. Please try again.';
       setMessages((prev) => [...prev, {
-        id: Date.now() + 1,
+        id: generateId(),
         text: errorMessage,
         sender: 'assistant',
         timestamp: new Date().toISOString(),
       }]);
-      setVoiceAiResponse(errorMessage);
+      speakAiResponse(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAiFinishedSpeaking = () => {
-    // AI finished speaking - user can now tap to speak again
-  };
+  // Summarize text for voice
+  const summarizeForVoice = async (text) => {
+    try {
+      const response = await fetch(`${API_URL}/api/summarize-for-voice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
 
-  const handleTapToSpeak = (transcript) => {
-    // User tapped mic and spoke - send to AI
-    handleVoiceMode(transcript);
-  };
-
-  const handleCloseVoicePopup = () => {
-    setIsVoicePopupOpen(false);
-    setVoiceUserMessage('');
-    setVoiceAiResponse('');
-    setIsVoiceMode(false);
-  };
-
-  // Open voice popup and set voice mode
-  const handleOpenVoicePopup = () => {
-    setIsVoicePopupOpen(true);
-    setIsVoiceMode(true);
-
-    // If we're at a decision point, speak the question
-    const voicePrompt = getVoicePromptForCurrentStep();
-    if (voicePrompt) {
-      setVoiceAiResponse(voicePrompt);
-    }
-  };
-
-  // Get the appropriate voice prompt based on current conversation step
-  const getVoicePromptForCurrentStep = () => {
-    switch (conversationStep) {
-      case 'initial':
-        return "Hi! I'm your AI shopping assistant. What are you looking to buy today? You can say things like 'I want a smartphone' or 'Show me phones under 30000 rupees'.";
-
-      case 'awaiting_device_type':
-        return "What type of device are you looking for? You can say smartphone, feature phone, tablet, or accessories.";
-
-      case 'awaiting_price':
-        return "What's your budget? You can say a price range like 10,000 to 20,000 rupees, or just tell me your maximum budget.";
-
-      case 'awaiting_features':
-        return "What features matter most to you? You can say camera, battery, gaming, or 5G support.";
-
-      default:
-        return null;
-    }
-  };
-
-  const getLastAiMessage = () => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].sender === 'assistant') {
-        return messages[i];
+      if (!response.ok) {
+        console.warn('Summarization failed, using original text');
+        return text;
       }
+
+      const data = await response.json();
+      return data.summary;
+    } catch (error) {
+      console.error('Summarize error:', error);
+      return text;
     }
-    return null;
   };
 
-  const lastAiMessage = getLastAiMessage();
+  // Speak AI response using Polly
+  const speakAiResponse = useCallback(async (text) => {
+    if (!text || text.trim() === '') return;
+
+    // Avoid re-speaking the same response
+    if (text === lastSpokenResponseRef.current) return;
+    lastSpokenResponseRef.current = text;
+
+    setIsVoiceSpeaking(true);
+
+    try {
+      // Stop any current audio
+      if (voiceAudioRef.current) {
+        voiceAudioRef.current.pause();
+        voiceAudioRef.current = null;
+      }
+
+      // Summarize the text first for voice
+      const summarizedText = await summarizeForVoice(text);
+
+      const response = await fetch(`${API_URL}/api/polly/speak-chat-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: summarizedText, isAssistant: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to synthesize speech');
+      }
+
+      const data = await response.json();
+
+      const audio = new Audio(data.audio);
+      voiceAudioRef.current = audio;
+
+      audio.onended = () => {
+        setIsVoiceSpeaking(false);
+        voiceAudioRef.current = null;
+      };
+
+      audio.onerror = () => {
+        console.error('Audio playback error');
+        setIsVoiceSpeaking(false);
+        voiceAudioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('Error speaking AI response:', error);
+      setIsVoiceSpeaking(false);
+    }
+  }, []);
+
+  // Stop voice audio
+  const stopVoiceAudio = useCallback(() => {
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      voiceAudioRef.current.currentTime = 0;
+      voiceAudioRef.current = null;
+    }
+    setIsVoiceSpeaking(false);
+  }, []);
+
+  // Stop voice listening
+  const stopVoiceListening = useCallback(() => {
+    if (voiceRecognitionRef.current) {
+      try {
+        voiceRecognitionRef.current.stop();
+        voiceRecognitionRef.current.abort();
+      } catch {}
+      voiceRecognitionRef.current = null;
+    }
+    setIsVoiceListening(false);
+
+    // Stop audio visualization
+    if (voiceAnimationFrameRef.current) {
+      cancelAnimationFrame(voiceAnimationFrameRef.current);
+      voiceAnimationFrameRef.current = null;
+    }
+    if (voiceAudioContextRef.current) {
+      voiceAudioContextRef.current.close();
+      voiceAudioContextRef.current = null;
+    }
+  }, []);
+
+  // Start voice listening
+  const startVoiceListening = useCallback(() => {
+    stopVoiceAudio();
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let finalTranscript = '';
+    let silenceTimer = null;
+    let hasSpoken = false;
+    let hasTriggered = false;
+
+    recognition.onstart = () => {
+      setIsVoiceListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+          hasSpoken = true;
+        }
+      }
+
+      // Reset silence timer
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+
+      silenceTimer = setTimeout(() => {
+        if (!hasTriggered && finalTranscript.trim()) {
+          hasTriggered = true;
+          handleVoiceMode(finalTranscript.trim());
+          recognition.stop();
+        }
+      }, 1500);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsVoiceListening(false);
+
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsVoiceListening(false);
+
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+
+      // Safe fallback (only if not already triggered)
+      if (!hasTriggered && hasSpoken && finalTranscript.trim()) {
+        hasTriggered = true;
+        handleVoiceMode(finalTranscript.trim());
+      }
+    };
+
+    voiceRecognitionRef.current = recognition;
+    recognition.start();
+
+    // Start audio visualization
+    const initAudioVisualization = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.8;
+        microphone.connect(analyser);
+
+        voiceAudioContextRef.current = audioContext;
+        voiceAnalyserRef.current = analyser;
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        const animate = () => {
+          if (!voiceAnalyserRef.current) return;
+
+          voiceAnalyserRef.current.getByteFrequencyData(dataArray);
+
+          // Get 5 frequency bands for the waveform bars
+          const levels = [];
+          const step = Math.floor(dataArray.length / 5);
+
+          for (let i = 0; i < 5; i++) {
+            const value = dataArray[i * step];
+            const normalized = Math.min(1, (value / 255) * 1.5);
+            levels.push(normalized);
+          }
+
+          setVoiceAudioLevels(levels);
+          voiceAnimationFrameRef.current = requestAnimationFrame(animate);
+        };
+
+        animate();
+      } catch (err) {
+        console.error('Audio visualization error:', err);
+      }
+    };
+
+    initAudioVisualization();
+  }, [handleVoiceMode, stopVoiceAudio]);
+
+  // Toggle voice listening
+  const toggleVoiceListening = () => {
+    if (isVoiceListening) {
+      stopVoiceListening();
+    } else {
+      startVoiceListening();
+    }
+  };
+
+  // Cleanup voice on unmount
+  useEffect(() => {
+    return () => {
+      stopVoiceListening();
+      stopVoiceAudio();
+    };
+  }, [stopVoiceListening, stopVoiceAudio]);
 
   // Build product data for comparison
   const buildProductData = () => {
@@ -1462,7 +2223,8 @@ function AIShopper({ onProductSelect }) {
           id: product.product_id,
           name: product.name,
           shortName: product.name.split(' ').slice(0, 3).join(' '),
-          image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+          // image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+          image: product.images?.[0] || '/placeholder.png',
           price: product.skus?.[0]?.price?.selling_price || 0,
           priceDisplay: product.skus?.[0]?.price
             ? `${product.skus[0].price.currency === 'INR' ? '₹' : '$'}${product.skus[0].price.selling_price?.toLocaleString()}`
@@ -1492,8 +2254,57 @@ function AIShopper({ onProductSelect }) {
   // Inline Comparison Component
   const InlineComparison = ({ selectedIds, onRemove, onSelect, onClose }) => {
     const products = useMemo(() => {
-      return selectedIds.map(id => productDataMap[id]).filter(Boolean);
-    }, [selectedIds]);
+      return selectedIds.map(id => {
+        // First check if we have full data in productDataMap
+        if (productDataMap[id]) {
+          return productDataMap[id];
+        }
+
+        // Find in apiRecommendations and look up full product data
+        const fromApi = apiRecommendations.find(p => p.id === id);
+        if (fromApi) {
+          // Look up full product details from productsData
+          const fullProduct = productsData.find(p => p.product_id === id);
+          if (fullProduct) {
+            return {
+              id: fullProduct.product_id,
+              name: fullProduct.name,
+              shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
+              image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
+              price: fullProduct.skus?.[0]?.price?.selling_price || 0,
+              priceDisplay: fullProduct.skus?.[0]?.price
+                ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
+                : '',
+              specs: {
+                battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
+                display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
+                camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
+                ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
+                processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+              },
+            };
+          }
+
+          // Fallback to api data with N/A specs
+          return {
+            id: fromApi.id,
+            name: fromApi.name,
+            shortName: fromApi.name?.split(' ').slice(0, 3).join(' ') || fromApi.name,
+            image: fromApi.image || '/placeholder.png',
+            price: fromApi.numericPrice || 0,
+            priceDisplay: fromApi.price || '',
+            specs: {
+              battery: { value: 'N/A', score: 50 },
+              display: { value: 'N/A', score: 70 },
+              camera: { value: 'N/A', score: 70 },
+              ram: { value: 'N/A', score: 60 },
+              processor: { value: 'N/A', score: 80 },
+            }
+          };
+        }
+        return null;
+      }).filter(Boolean);
+    }, [selectedIds, apiRecommendations]);
 
     const bestDevice = useMemo(() => {
       if (products.length === 0) return null;
@@ -1828,8 +2639,20 @@ function AIShopper({ onProductSelect }) {
     );
   };
 
+  // Click handler to initialize earphone controls on first interaction
+  const handleFirstInteraction = async () => {
+    setIsEarphoneEnabled(true);
+    if (!isEarphoneEnabled && !audioRef.current) {
+      try {
+        await enableEarphoneControls();
+      } catch (err) {
+        console.log('Audio init failed:', err.message);
+      }
+    }
+  };
+
   return (
-    <div className="ai-shopper-container">
+    <div className="ai-shopper-container" onClick={handleFirstInteraction}>
       <div className="top-toolbar">
         <div className="toolbar-logo">
           <div className="logo-icon">
@@ -1900,8 +2723,9 @@ function AIShopper({ onProductSelect }) {
           )
         ))}
 
-        {/* Loading indicator - shows during streaming, hidden when voice popup is open */}
+        {/* Show loading indicator only when no streaming message exists */}
         {!isVoicePopupOpen && isLoading && (
+        // {isLoading && !messages.some(m => m.sender === 'assistant' && m.text === '') && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar">
               <Bot size={20} />
@@ -1918,8 +2742,9 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Device Type Selection Tiles - shown when AI asks what type of device (hidden in voice mode or popup open) */}
-        {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'device_type' && (
+        {/* Device Type Selection Tiles - shown when AI indicates need for category selection */}
+        {/* {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'device_type' && ( */}
+        {!isLoading && conversationStep === 'category' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -1946,8 +2771,9 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Price Selection Tiles - continuation of AI message (no duplicate avatar, hidden in voice mode or popup open) */}
-        {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'price_range' && (
+        {/* Price Selection Tiles - shown when AI indicates need for budget selection */}
+        {/* {!isVoicePopupOpen && !isLoading && !isVoiceMode && awaitingResponse === 'price_range' && ( */}
+        {!isLoading && conversationStep === 'budget_range' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -1972,8 +2798,9 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Feature Selection Tiles - continuation of AI message (no duplicate avatar, hidden in voice mode or popup open) */}
-        {!isVoicePopupOpen && !isLoading && !isVoiceMode && conversationStep === 'awaiting_features' && (
+        {/* Feature Selection Tiles - shown when AI indicates need for feature selection */}
+        {/* {!isVoicePopupOpen && !isLoading && !isVoiceMode && conversationStep === 'awaiting_features' && ( */}
+        {!isLoading && conversationStep === 'features' && (
           <div className="message-wrapper assistant">
             <div className="message-avatar assistant-avatar" style={{ visibility: 'hidden' }}>
               <Bot size={20} />
@@ -2040,6 +2867,7 @@ function AIShopper({ onProductSelect }) {
               placeholder="Type your request..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              autoFocus
               className="chat-input"
             />
             {inputValue.trim() ? (
@@ -2047,8 +2875,32 @@ function AIShopper({ onProductSelect }) {
                 <Send size={20} />
               </button>
             ) : (
-              <button type="button" className="icon-button mic-button" onClick={handleOpenVoicePopup}>
-                <Mic size={20} />
+              <button
+                type="button"
+                className={`icon-button mic-button ${isVoiceListening ? 'listening' : ''} ${isVoiceSpeaking ? 'speaking' : ''}`}
+                onClick={toggleVoiceListening}
+                title={isVoiceListening ? 'Tap to stop listening' : isVoiceSpeaking ? 'Tap to stop speaking' : 'Tap to speak'}
+              >
+                {isVoiceListening ? (
+                  <div className="voice-waveform">
+                    {/* <button type="button" className="icon-button mic-button" onClick={handleOpenVoicePopup}>
+                      <Mic size={20} /> */}
+                    {voiceAudioLevels.map((level, index) => (
+                      <div
+                        key={index}
+                        className="voice-waveform-bar"
+                        style={{
+                          height: `${8 + level * 16}px`,
+                          opacity: 0.4 + level * 0.6,
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : isVoiceSpeaking ? (
+                  <Volume2 size={20} />
+                ) : (
+                  <Mic size={20} />
+                )}
               </button>
             )}
           </div>
@@ -2061,20 +2913,6 @@ function AIShopper({ onProductSelect }) {
         onScanSuccess={handleScanSuccess}
       />
 
-      <VoiceInputModal
-        isOpen={isVoiceInputOpen}
-        onClose={handleCloseVoiceInput}
-        onTranscriptComplete={handleVoiceTranscriptComplete}
-      />
-
-      <VoicePopup
-        isOpen={isVoicePopupOpen}
-        onClose={handleCloseVoicePopup}
-        userMessage={voiceUserMessage}
-        aiResponse={voiceAiResponse}
-        onAiFinishedSpeaking={handleAiFinishedSpeaking}
-        onTapToSpeak={handleTapToSpeak}
-      />
     </div>
   );
 }
