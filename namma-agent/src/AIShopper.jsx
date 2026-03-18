@@ -1485,6 +1485,8 @@ function AIShopper({ onProductSelect }) {
       sender: 'assistant',
       timestamp: new Date().toISOString(),
     }]);
+    // Use the same flow as product detail modal - call onProductSelect
+    onProductSelect?.(product);
   };
 
   const handleCloseComparison = () => {
@@ -2708,16 +2710,6 @@ function AIShopper({ onProductSelect }) {
                 <div className={`message-bubble ${message.sender}`}>
                   <p>{message.text}</p>
                 </div>
-                {/* Show ProductRecommendations inline after AI message when showProducts is true */}
-                {message.sender === 'assistant' && message.showProducts && (
-                  <div className="message-bubble assistant products" style={{ marginTop: '8px' }}>
-                    <ProductRecommendations
-                      recommendations={message.recommendations || apiRecommendations}
-                      onCompare={handleCompare}
-                      onProductSelect={onProductSelect}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )
@@ -2826,6 +2818,17 @@ function AIShopper({ onProductSelect }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Product Recommendations - full width, outside message bubble */}
+        {!isVoicePopupOpen && conversationStep === 'showing_products' && filteredRecommendations.length > 0 && !isLoading && (
+          <div className="full-width-section products-section">
+            <ProductRecommendations
+              recommendations={filteredRecommendations}
+              onCompare={handleCompare}
+              onProductSelect={onProductSelect}
+            />
           </div>
         )}
 

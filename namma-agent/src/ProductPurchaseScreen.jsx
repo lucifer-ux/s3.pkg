@@ -32,8 +32,29 @@ import './ProductPurchaseScreen.css';
      },
    };
    
-   function ProductPurchaseScreen({ onBack, onBuy, onPayViaLoan }) {
-     const [currentProduct, setCurrentProduct] = useState(purchaseData.original);
+   function ProductPurchaseScreen({ product, onBack, onBuy, onPayViaLoan }) {
+     // Transform the product prop to match the expected format
+     const getPrice = (p) => {
+       if (typeof p.price === 'number') return p.price;
+       if (typeof p.price === 'string') return parseInt(p.price.replace(/[^0-9]/g, '')) || 0;
+       if (p.numericPrice) return p.numericPrice;
+       return 0;
+     };
+
+     const transformProduct = (p) => {
+       const price = getPrice(p);
+       return {
+         id: p.id,
+         name: p.name,
+         price: price,
+         originalPrice: Math.round(price * 1.1),
+         image: p.image,
+         badge: 'SELECTED FOR YOU',
+         aiReason: `Based on your preferences, we've selected the ${p.name} with ${p.highlights?.[0] || 'great features'}.`,
+       };
+     };
+
+     const [currentProduct, setCurrentProduct] = useState(() => transformProduct(product));
      const [suggestedProduct] = useState(purchaseData.suggested);
 
 
