@@ -774,9 +774,20 @@ function AIShopper({ onProductSelect }) {
 
     const lowerText = messageText.trim().toLowerCase();
 
+    // Combine apiRecommendations with productsData as fallback
+    const fullProductCatalog = productsData.map(p => ({
+      id: p.product_id,
+      product_id: p.product_id,
+      name: p.name,
+      ...p
+    }));
+    const productSource = apiRecommendations.length > 0
+      ? [...apiRecommendations, ...fullProductCatalog.filter(p => !apiRecommendations.some(ar => ar.product_id === p.product_id))]
+      : fullProductCatalog;
+
     // Check if user wants to select/buy a specific product (must have product name with at least 2 words or a model number)
-    const selectMatch = lowerText.match(/^(?:select|choose)\s+(?:this|the)?\s*(.+)$/i);
-    if (selectMatch && apiRecommendations.length > 0) {
+    const selectMatch = lowerText.match(/^(?:select|choose|buy|purchase)\s+(?:this|the)?\s*(.+)$/i);
+    if (selectMatch && productSource.length > 0) {
       const productName = selectMatch[1].trim().toLowerCase();
 
       // Require at least 2 words OR a model number (digits) to avoid matching generic phrases like "this one"
@@ -791,7 +802,7 @@ function AIShopper({ onProductSelect }) {
       let bestMatch = null;
       let bestScore = 0;
 
-      for (const product of apiRecommendations) {
+      for (const product of productSource) {
         const productNameLower = (product.name || '').toLowerCase();
         const searchWords = productName.split(/\s+/).filter(w => w.length > 1);
 
@@ -894,19 +905,19 @@ function AIShopper({ onProductSelect }) {
 
     // Check if user wants to compare products (handles "compare" or "campare" typo)
     const compareMatch = lowerText.match(/^(?:compare|campare)\s+(.+?)\s+(?:and|vs\.?|with)\s+(.+)$/i);
-    console.log('Compare match:', compareMatch, 'messageText:', JSON.stringify(messageText), 'lowerText:', lowerText, 'apiRecommendations:', apiRecommendations.length);
-    if (compareMatch && apiRecommendations.length >= 2) {
+    console.log('Compare match:', compareMatch, 'messageText:', JSON.stringify(messageText), 'lowerText:', lowerText, 'productSource:', productSource.length);
+    if (compareMatch && productSource.length >= 2) {
       const product1Name = compareMatch[1].trim().toLowerCase();
       const product2Name = compareMatch[2].trim().toLowerCase();
       console.log('Searching for:', product1Name, 'and', product2Name);
-      console.log('Available products:', apiRecommendations.map(p => p.name));
+      console.log('Available products:', productSource.map(p => p.name));
 
       // Find best matching products using scoring
       const findBestMatch = (searchName) => {
         let bestMatch = null;
         let bestScore = 0;
 
-        for (const product of apiRecommendations) {
+        for (const product of productSource) {
           const productName = (product.name || product.shortName || '').toLowerCase();
           const searchWords = searchName.split(/\s+/).filter(w => w.length > 1);
           const productWords = productName.split(/\s+/).filter(w => w.length > 1);
@@ -1048,15 +1059,6 @@ function AIShopper({ onProductSelect }) {
         if (parsed.missingInfo === 'device_type') {
           setConversationStep('awaiting_device_type');
           setAwaitingResponse('device_type');
-
-          // Add a brief acknowledgment from AI
-          const acknowledgment = "I'd be happy to help you find the perfect device!";
-          setMessages((prev) => [...prev, {
-            id: Date.now() + 1,
-            text: acknowledgment,
-            sender: 'assistant',
-            timestamp: new Date().toISOString(),
-          }]);
 
           // If in voice mode, set the voice prompt
           if (isVoiceMode) {
@@ -1568,6 +1570,7 @@ function AIShopper({ onProductSelect }) {
 
   // Handle voice mode - send message and auto-read response
   const handleVoiceMode = async (transcript) => {
+    console.log('handleVoiceMode called with:', transcript);
     if (!transcript.trim()) return;
 
     // Send message in background (same as regular chat)
@@ -1581,10 +1584,23 @@ function AIShopper({ onProductSelect }) {
     setMessages((prev) => [...prev, userMessage]);
 
     const lowerText = transcript.trim().toLowerCase();
+    console.log('lowerText:', lowerText);
+
+    // Combine apiRecommendations with productsData as fallback for voice commands
+    const fullProductCatalog = productsData.map(p => ({
+      id: p.product_id,
+      product_id: p.product_id,
+      name: p.name,
+      ...p
+    }));
+    const productSource = apiRecommendations.length > 0
+      ? [...apiRecommendations, ...fullProductCatalog.filter(p => !apiRecommendations.some(ar => ar.product_id === p.product_id))]
+      : fullProductCatalog;
 
     // Check if user wants to select/buy a specific product via voice
-    const selectMatch = lowerText.match(/^(?:select|choose)\s+(?:this|the)?\s*(.+)$/i);
-    if (selectMatch && apiRecommendations.length > 0) {
+    const selectMatch = lowerText.match(/^(?:select|choose|buy|purchase)\s+(?:this|the)?\s*(.+)$/i);
+    console.log('Voice select check:', { selectMatch: !!selectMatch, productSourceLength: productSource.length, transcript });
+    if (selectMatch && productSource.length > 0) {
       const productName = selectMatch[1].trim().toLowerCase();
 
       // Require at least 2 words OR a model number to avoid generic phrases
@@ -1597,7 +1613,7 @@ function AIShopper({ onProductSelect }) {
         let bestMatch = null;
         let bestScore = 0;
 
-        for (const product of apiRecommendations) {
+        for (const product of productSource) {
           const productNameLower = (product.name || '').toLowerCase();
           const searchWords = productName.split(/\s+/).filter(w => w.length > 1);
 
@@ -1624,60 +1640,104 @@ function AIShopper({ onProductSelect }) {
         }
 
         if (bestMatch && bestScore > 50) {
-          // Trigger purchase flow
+          // Build product object for purchase flow
           const fullProduct = productsData.find(p => p.product_id === bestMatch.product_id);
-          if (fullProduct) {
-            handleSelectDeviceForPurchase({
-              id: fullProduct.product_id,
-              name: fullProduct.name,
-              shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
-              image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
-              price: fullProduct.skus?.[0]?.price?.selling_price || 0,
-              priceDisplay: fullProduct.skus?.[0]?.price
-                ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
-                : '',
-              specs: {
-                battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
-                display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
-                camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
-                ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
-                processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
-              },
-            });
-          } else {
-            handleSelectDeviceForPurchase({
-              id: bestMatch.prid,
-              name: bestMatch.name,
-              shortName: bestMatch.name?.split(' ').slice(0, 3).join(' ') || bestMatch.name,
-              image: bestMatch.image || '/placeholder.png',
-              price: bestMatch.numericPrice || 0,
-              priceDisplay: bestMatch.price || '',
-              specs: {
-                battery: { value: 'N/A', score: 50 },
-                display: { value: 'N/A', score: 70 },
-                camera: { value: 'N/A', score: 70 },
-                ram: { value: 'N/A', score: 60 },
-                processor: { value: 'N/A', score: 80 },
-              }
-            });
-          }
+          const productForPurchase = fullProduct ? {
+            id: fullProduct.product_id,
+            name: fullProduct.name,
+            shortName: fullProduct.name?.split(' ').slice(0, 3).join(' ') || fullProduct.name,
+            image: fullProduct.assets?.main_image?.url_medium || fullProduct.images?.[0] || '/placeholder.png',
+            price: fullProduct.skus?.[0]?.price?.selling_price || 0,
+            priceDisplay: fullProduct.skus?.[0]?.price
+              ? `₹${fullProduct.skus[0].price.selling_price?.toLocaleString()}`
+              : '',
+            specs: {
+              battery: { value: fullProduct.battery?.capacity_mAh ? `${fullProduct.battery.capacity_mAh} mAh` : 'N/A', score: fullProduct.battery?.capacity_mAh ? Math.min(fullProduct.battery.capacity_mAh / 60, 100) : 50 },
+              display: { value: fullProduct.display?.size_inches ? `${fullProduct.display.size_inches}" ${fullProduct.display.type}` : 'N/A', score: fullProduct.display?.size_inches ? Math.min(fullProduct.display.size_inches * 12, 100) : 70 },
+              camera: { value: fullProduct.camera?.rear?.[0]?.megapixels ? `${fullProduct.camera.rear[0].megapixels}MP` : 'N/A', score: fullProduct.camera?.rear?.[0]?.megapixels ? Math.min(fullProduct.camera.rear[0].megapixels / 2.5, 100) : 70 },
+              ram: { value: fullProduct.memory?.ram || 'N/A', score: fullProduct.memory?.ram ? parseInt(fullProduct.memory.ram) * 5 : 60 },
+              processor: { value: fullProduct.processor?.chipset || 'N/A', score: fullProduct.processor?.chipset?.includes('A17') || fullProduct.processor?.chipset?.includes('Snapdragon 8') ? 95 : 80 },
+            },
+          } : {
+            id: bestMatch.prid,
+            name: bestMatch.name,
+            shortName: bestMatch.name?.split(' ').slice(0, 3).join(' ') || bestMatch.name,
+            image: bestMatch.image || '/placeholder.png',
+            price: bestMatch.numericPrice || 0,
+            priceDisplay: bestMatch.price || '',
+            specs: {
+              battery: { value: 'N/A', score: 50 },
+              display: { value: 'N/A', score: 70 },
+              camera: { value: 'N/A', score: 70 },
+              ram: { value: 'N/A', score: 60 },
+              processor: { value: 'N/A', score: 80 },
+            }
+          };
+
+          // Trigger purchase flow
+          setPurchaseProduct(productForPurchase);
+          setConversationStep('purchasing');
+
+          // Add purchase message to chat
+          const purchaseMessage = `Great choice! The ${productForPurchase.name} is an excellent pick. Here are the payment options:`;
+          setMessages((prev) => [...prev, {
+            id: generateId(),
+            text: purchaseMessage,
+            sender: 'assistant',
+            timestamp: new Date().toISOString(),
+          }]);
+
+          // Set voice response for TTS
+          setVoiceAiResponse(purchaseMessage);
           return;
         }
       }
     }
 
     // Check if user wants to compare products via voice
-    const compareMatch = lowerText.match(/^(?:compare|campare)\s+(.+?)\s+(?:and|vs\.?|with)\s+(.+)$/i);
-    if (compareMatch && apiRecommendations.length >= 2) {
+    // Try standard separators first, then fallback to parsing known brand words
+    let compareMatch = lowerText.match(/^(?:compare|campare)\s+(.+?)\s+(?:and|vs\.?|with|&)\s+(.+)$/i);
+
+    // If no match, try to split by common brand names (samsung, oneplus, iphone, xiaomi, oppo, vivo, realme, redmi)
+    if (!compareMatch && lowerText.startsWith('compare')) {
+      const afterCompare = lowerText.replace(/^compare\s*/, '');
+      const brands = ['samsung', 'oneplus', 'iphone', 'xiaomi', 'oppo', 'vivo', 'realme', 'redmi', 'pixel', 'nothing'];
+      const foundBrands = [];
+
+      for (const brand of brands) {
+        const index = afterCompare.indexOf(brand);
+        if (index !== -1) {
+          foundBrands.push({ brand, index });
+        }
+      }
+
+      // Sort by position
+      foundBrands.sort((a, b) => a.index - b.index);
+
+      if (foundBrands.length >= 2) {
+        const first = foundBrands[0];
+        const second = foundBrands[1];
+        let product1 = afterCompare.substring(first.index, second.index).trim();
+        const product2 = afterCompare.substring(second.index).trim();
+        // Remove trailing separator words from product1
+        product1 = product1.replace(/\s+(and|vs|with|&)$/i, '');
+        compareMatch = [null, product1, product2];
+        console.log('Parsed compare via brand detection:', product1, 'vs', product2);
+      }
+    }
+    console.log('Voice compare check:', { compareMatch: !!compareMatch, productSourceLength: productSource.length, transcript });
+    if (compareMatch && productSource.length >= 2) {
       const product1Name = compareMatch[1].trim().toLowerCase();
       const product2Name = compareMatch[2].trim().toLowerCase();
+      console.log('Voice compare searching for:', product1Name, 'and', product2Name);
 
       // Find best matching products
       const findBestMatch = (searchName) => {
         let bestMatch = null;
         let bestScore = 0;
+        console.log('Finding match for:', searchName, 'in', productSource.length, 'products');
 
-        for (const product of apiRecommendations) {
+        for (const product of productSource) {
           const productName = (product.name || product.shortName || '').toLowerCase();
           const searchWords = searchName.split(/\s+/).filter(w => w.length > 1);
           const productWords = productName.split(/\s+/).filter(w => w.length > 1);
@@ -1703,14 +1763,30 @@ function AIShopper({ onProductSelect }) {
             bestMatch = product;
           }
         }
+        console.log('Best match for', searchName, ':', bestMatch?.name, 'score:', bestScore);
         return bestMatch;
       };
 
       const match1 = findBestMatch(product1Name);
       const match2 = findBestMatch(product2Name);
+      console.log('Voice compare matches:', { match1: match1?.name, match2: match2?.name, id1: match1?.id, id2: match2?.id });
 
       if (match1 && match2 && match1.id !== match2.id) {
-        handleCompare([match1.id, match2.id]);
+        // Trigger comparison flow
+        setSelectedProducts([match1.id, match2.id]);
+        setConversationStep('comparing');
+
+        // Add comparison message to chat
+        const compareMessage = `Comparing ${match1.name} and ${match2.name} side by side. Tap on a device to select it for purchase.`;
+        setMessages((prev) => [...prev, {
+          id: generateId(),
+          text: compareMessage,
+          sender: 'assistant',
+          timestamp: new Date().toISOString(),
+        }]);
+
+        // Set voice response for TTS
+        setVoiceAiResponse(compareMessage);
         return;
       }
     }
@@ -1787,14 +1863,6 @@ function AIShopper({ onProductSelect }) {
         if (parsed.missingInfo === 'device_type') {
           setConversationStep('awaiting_device_type');
           setAwaitingResponse('device_type');
-
-          // Add acknowledgment
-          setMessages((prev) => [...prev, {
-            id: Date.now() + 1,
-            text: "I'd be happy to help you find the perfect device!",
-            sender: 'assistant',
-            timestamp: new Date().toISOString(),
-          }]);
 
           // Set voice prompt for next question
           setVoiceAiResponse("What type of device are you looking for? You can say smartphone, feature phone, tablet, or accessories.");
@@ -2668,7 +2736,7 @@ function AIShopper({ onProductSelect }) {
           <div className="header-section">
             <div className="avatar-container">
               <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
+                src="/placeholder.svg"
                 alt="AI Shopper Avatar"
                 className="avatar-image"
               />
@@ -2829,8 +2897,8 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Inline Comparison - full width, outside message bubble (hidden when voice popup open) */}
-        {!isVoicePopupOpen && conversationStep === 'comparing' && selectedProducts.length >= 2 && !isLoading && (
+        {/* Inline Comparison - full width, outside message bubble */}
+        {conversationStep === 'comparing' && selectedProducts.length >= 2 && !isLoading && (
           <div className="full-width-section comparison-section">
             <InlineComparison
               selectedIds={selectedProducts}
@@ -2841,8 +2909,8 @@ function AIShopper({ onProductSelect }) {
           </div>
         )}
 
-        {/* Inline Purchase - full width, outside message bubble (hidden when voice popup open) */}
-        {!isVoicePopupOpen && conversationStep === 'purchasing' && purchaseProduct && !isLoading && (
+        {/* Inline Purchase - full width, outside message bubble */}
+        {conversationStep === 'purchasing' && purchaseProduct && !isLoading && (
           <div className="full-width-section purchase-section">
             <InlinePurchase
               product={purchaseProduct}

@@ -12,7 +12,7 @@ import './ProductPurchaseScreen.css';
        name: 'iPhone 15 Pro',
        price: 999,
        originalPrice: 1099,
-       image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=400&h=500&fit=crop',
+       image: '/placeholder.svg',
        badge: 'EDITOR\'S CHOICE',
        aiReason: 'Based on your photography usage patterns, we\'ve identified a configuration with a superior camera system that matches your creative needs.',
      },

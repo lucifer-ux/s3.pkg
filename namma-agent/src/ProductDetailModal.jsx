@@ -71,8 +71,7 @@ function ProductDetailModal({ productId, isOpen, onClose, onCompare, onBuy }) {
               src={product.image}
               alt={product.name}
               onError={(e) => {
-                // e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
-                e.target.src = 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop';
+                e.target.src = '/placeholder.svg';
               }}
             />
           </div>

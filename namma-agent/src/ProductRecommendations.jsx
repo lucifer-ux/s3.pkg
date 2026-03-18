@@ -35,7 +35,7 @@ function ProductRecommendations({ onCompare, recommendations, onProductSelect })
         ? `${product.skus[0].price.currency === 'INR' ? '₹' : '$'}${product.skus[0].price.selling_price?.toLocaleString()}`
         : '',
       tagline: product.highlights?.[0] || product.description?.substring(0, 60) + '...',
-      image: product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=400&h=400&fit=crop',
+      image: product.images?.[0] || '/placeholder.svg',
     }));
   }, [recommendations]);
 
@@ -114,8 +114,7 @@ function ProductRecommendations({ onCompare, recommendations, onProductSelect })
                   alt={product.name}
                   className="product-image"
                   onError={(e) => {
-                    // e.target.src = 'https://via.placeholder.com/400x400/5b4fcf/ffffff?text=Phone';
-                    e.target.src = 'https://images.unsplash.com/photo-1610945265078-3858a0828671?w=400&h=400&fit=crop';
+                    e.target.src = '/placeholder.svg';
                   }}
                 />
               </div>

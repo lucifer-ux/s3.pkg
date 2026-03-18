@@ -197,7 +197,7 @@ const buildProductData = (productId) => {
     id: product.product_id,
     name: product.name,
     shortName: product.name.split(' ').slice(0, 3).join(' '),
-    image: product.assets?.main_image?.url_medium || product.images?.[0] || 'https://images.unsplash.com/photo-1598327105666-5b89351aff23?w=200&h=200&fit=crop',
+    image: product.assets?.main_image?.url_medium || product.images?.[0] || '/placeholder.svg',
     price: price,
     formattedPrice: `₹${price.toLocaleString('en-IN')}`,
     brand: product.brand,

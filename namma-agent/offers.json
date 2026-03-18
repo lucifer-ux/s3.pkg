@@ -3,7 +3,7 @@
     {
       "offer_id": "bank_offer_001",
       "bank_name": "Flipkart Axis",
-      "bank_logo": "https://example.com/logos/flipkart-axis.png",
+      "bank_logo": "/logos/flipkart-axis.png",
       "discount_amount": 4750,
       "currency": "INR",
       "offer_type": "Credit Card",
@@ -16,7 +16,7 @@
     {
       "offer_id": "bank_offer_002",
       "bank_name": "ICICI",
-      "bank_logo": "https://example.com/logos/icici.png",
+      "bank_logo": "/logos/icici.png",
       "discount_amount": 3000,
       "currency": "INR",
       "offer_type": "Credit Card",
@@ -29,7 +29,7 @@
     {
       "offer_id": "bank_offer_003",
       "bank_name": "Paytm",
-      "bank_logo": "https://example.com/logos/paytm.png",
+      "bank_logo": "/logos/paytm.png",
       "discount_amount": 3050,
       "currency": "INR",
       "offer_type": "UPI",
@@ -42,7 +42,7 @@
     {
       "offer_id": "bank_offer_004",
       "bank_name": "HDFC",
-      "bank_logo": "https://example.com/logos/hdfc.png",
+      "bank_logo": "/logos/hdfc.png",
       "discount_amount": 3000,
       "currency": "INR",
       "offer_type": "Credit, Debit",
@@ -57,7 +57,7 @@
     {
       "emi_offer_id": "emi_001",
       "bank_name": "HDFC Bank",
-      "bank_logo": "https://example.com/logos/hdfc.png",
+      "bank_logo": "/logos/hdfc.png",
       "monthly_amount": 3778,
       "tenure_months": 9,
       "offer_type": "Credit Card",
@@ -72,7 +72,7 @@
     {
       "emi_offer_id": "emi_002",
       "bank_name": "ICICI Bank",
-      "bank_logo": "https://example.com/logos/icici.png",
+      "bank_logo": "/logos/icici.png",
       "monthly_amount": 3778,
       "tenure_months": 9,
       "offer_type": "Credit Card",
@@ -87,7 +87,7 @@
     {
       "emi_offer_id": "emi_003",
       "bank_name": "Flipkart Axis Bank",
-      "bank_logo": "https://example.com/logos/flipkart-axis.png",
+      "bank_logo": "/logos/flipkart-axis.png",
       "monthly_amount": 3778,
       "tenure_months": 9,
       "offer_type": "Credit Card",
@@ -102,7 +102,7 @@
     {
       "emi_offer_id": "emi_004",
       "bank_name": "Flipkart SBI",
-      "bank_logo": "https://example.com/logos/sbi.png",
+      "bank_logo": "/logos/sbi.png",
       "monthly_amount": 3778,
       "tenure_months": 9,
       "offer_type": "Credit Card",
